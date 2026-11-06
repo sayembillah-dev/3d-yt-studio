@@ -22,3 +22,6 @@ npm-debug.log*
 
 # per-run QA logs (qa_all.sh writes one set per run)
 Engine/examples/*/work/logs/
+
+# the user's real voice sample (voice-clone reference for tts_clone.py) — private, never pushed to the public repo
+Engine/references/voice/
