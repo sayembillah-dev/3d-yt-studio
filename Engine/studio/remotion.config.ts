@@ -10,7 +10,7 @@ if (!fs.existsSync(path.join(project, 'scenes', 'index.tsx'))) {
 }
 Config.setPublicDir(path.join(project, 'public'));
 Config.setChromiumOpenGlRenderer('angle');
-Config.setConcurrency(Number(process.env.SW_CONCURRENCY || 4));
+Config.setConcurrency(Number(process.env.SW_CONCURRENCY || 3));
 Config.setVideoImageFormat('jpeg');
 Config.setJpegQuality(93);
 Config.setCodec('h264');

@@ -9,7 +9,7 @@
 #     rays / MSAA, small shadow map): motion + pacing numbers only (qa_all.sh pace), ~15x faster. Never review its look.
 #   render.sh <project_dir> splice <Comp> <a-b>[,c-d...] [base.mp4] → re-render only those frames into the last render
 #     (base default work/<Comp>.mp4, kept as work/<Comp>.prev.mp4; size follows the base; use the base's SW_PROPS)
-# Env: STUDIO (default <Engine>/studio), SW_CONCURRENCY (default 4),
+# Env: STUDIO (default <Engine>/studio), SW_CONCURRENCY (default 3: fastest measured, 2026-11-06),
 #      SW_PROPS (JSON input props, e.g. '{"noCaptions":true}' for clean thumbnail stills), SW_SCALE (e.g. 0.25 preview). Paths may contain spaces.
 set -euo pipefail
 PROJ="$(cd "$1" && pwd)"; MODE="$2"; COMP="$3"
@@ -66,11 +66,11 @@ PY
     ;;
   video|preview|pace)
     if [ "$MODE" = pace ]; then OUT="${4:-$PROJ/work/${COMP}_pace.mp4}"; else OUT="${4:-$PROJ/work/$COMP.mp4}"; fi
-    "${REMOTION[@]}" render "$BUILD" "$COMP" "$OUT" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-4}" --log=error --muted >/dev/null 2>&1 && echo "$OUT" || { echo "RENDER FAILED"; exit 1; }
+    "${REMOTION[@]}" render "$BUILD" "$COMP" "$OUT" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-3}" --log=error --muted >/dev/null 2>&1 && echo "$OUT" || { echo "RENDER FAILED"; exit 1; }
     ;;
   range)
     OUT="${5:-$PROJ/work/${COMP}_$4.mp4}"
-    "${REMOTION[@]}" render "$BUILD" "$COMP" "$OUT" --frames="$4" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-4}" --log=error --muted >/dev/null 2>&1 && echo "$OUT" || { echo "RENDER FAILED"; exit 1; }
+    "${REMOTION[@]}" render "$BUILD" "$COMP" "$OUT" --frames="$4" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-3}" --log=error --muted >/dev/null 2>&1 && echo "$OUT" || { echo "RENDER FAILED"; exit 1; }
     ;;
   splice)
     BASE="${5:-$PROJ/work/$COMP.mp4}"; [ -f "$BASE" ] || { echo "SPLICE FAILED: no base render $BASE"; exit 1; }
@@ -83,7 +83,7 @@ PY
     TMP="$PROJ/work/splice_tmp"; rm -rf "$TMP"; mkdir -p "$TMP"; SEGS=()
     IFS=',' read -ra RANGES <<< "$4"
     for R in "${RANGES[@]}"; do
-      "${REMOTION[@]}" render "$BUILD" "$COMP" "$TMP/$R.mp4" --frames="$R" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-4}" --log=error --muted >/dev/null 2>&1 || { echo "RENDER FAILED ($R)"; exit 1; }
+      "${REMOTION[@]}" render "$BUILD" "$COMP" "$TMP/$R.mp4" --frames="$R" --gl=angle ${PROPS[@]+"${PROPS[@]}"} --concurrency="${SW_CONCURRENCY:-3}" --log=error --muted >/dev/null 2>&1 || { echo "RENDER FAILED ($R)"; exit 1; }
       SEGS+=("$TMP/$R.mp4:$R")
     done
     python3 "$HERE/splice.py" "$BASE" "$TMP/spliced.mp4" "${SEGS[@]}" || exit 1

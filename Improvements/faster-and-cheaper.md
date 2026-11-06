@@ -8,6 +8,33 @@ This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (
 
 Nothing on this page has been implemented yet. Section 5 is the to-do list.
 
+## Status (2026-11-06, Tier 4): #10, #11, #13 built; #12 measured, default now 3
+
+- **#12 Render concurrency, measured** on the Mac mini (M-series, 10 cores, 16 GB), full render of #01's scene
+  (1746 f, 1080×1920, bundling included), one run each in this order:
+
+  | Concurrency | 4 | 2 | **3** | 6 | 8 | 4 (repeat) |
+  |---|---|---|---|---|---|---|
+  | Seconds | 114 | 104 | **95** | 113 | 120 | 115 |
+
+  The repeat of 4 landed within 1 s, so the noise is small, and **3 is ~17 % faster** than the old default: the GPU,
+  not the CPU, is the limit, and more parallel tabs just contend for it. Default is now 3 (`render.sh`,
+  `remotion.config.ts`). Not yet measured on the 8 GB MacBook; there, 2–3 also uses less memory. Re-test with
+  `SW_CONCURRENCY=2|3` the first time you render there.
+
+- **#10 Model per phase group.** SKILL.md's handoff table now sets the Agent `model`/`effort` per group: shot plan →
+  gate and build run on `opus` at full effort; QA (Phase 9) inherits the session model; the new **finish** group
+  (Phases 10–12, split out of the old QA→deliver group) runs on `sonnet` at `low` effort, as do gate re-runs with no
+  code change. These are aliases, never version names. Untested on a real video; #03's ledger will show the split.
+- **#11 Phase cards.** `Engine/references/cards/{script,shotplan,build,finish}.md`, each 1.5–2.6 KB (~400–650 tokens);
+  `qa-rubric.md` already serves as the QA card. SKILL.md and the subagent template now say to read the card and to open
+  style-bible or fix-playbook only at the section a failed check names. The 24 KB style bible is no longer read up front.
+- **#13 Prop library.** The library by theme already existed (basic, dutch, nature, world, town, tower: 96 exports).
+  What was missing was a way to find props without reading ~1,700 lines of code. `Engine/scripts/props_catalog.mjs`
+  writes `Engine/references/props-catalog.md` (one line per prop with its parameters and comment, ~3k tokens).
+  `--check` fails when a prop was added without re-running it. Phase 8 reads the catalog first, and its gate includes
+  `--check`.
+
 ## Status (2026-11-06, later): Step 5 built + two new fixes from video #02's data; Step 6 phase cards not started
 
 **Video #02 measured (stopped at audio, so not a full comparison):** $14.78 vs #01's $29.06, active time 1h22m vs

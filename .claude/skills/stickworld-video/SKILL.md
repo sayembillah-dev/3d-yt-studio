@@ -28,7 +28,7 @@ Examples to copy patterns from: `Engine/examples/00_gate` (gate shot, the canoni
    hand it off to a subagent per "Working across sessions" below (it re-runs that phase's gate itself; state on
    disk may have changed). Phases 1–5 (`topic` through `voice`) run directly in this session.
 2. If the user gives **timestamped feedback** ("at 0:12 the cat clips through the barrel"), hand it to the
-   QA→deliver subagent the same way — see "Working across sessions" step 6 — instead of running the fix loop here.
+   QA subagent (then re-run the finish group) the same way — see "Working across sessions" step 6 — instead of running the fix loop here.
 3. Otherwise start at Phase 1 — and the **very first command** of a new video is
    `python3 $S/ledger.py begin` (starts the cost clock; before any question to the user).
 4. After every phase passes, set `"phase"` in project.json to the next phase name **before** doing anything else
@@ -48,28 +48,38 @@ writes it) — never edit ledger.md by hand. Rules:
 - Per-phase breakdown: `python3 $S/ledger.py show $P`. Rewrite the table any time: `python3 $S/ledger.py refresh`.
 - At delivery (Phase 12) paste the video's ledger row and the `show` breakdown to the user.
 
-Read `$R/style-bible.md` once per session before Phase 4. It is the spec; every rule there is checked somewhere below.
+**Phase cards, not whole docs** (Improvements #11: in #01 each whole doc was re-read ~150×). Each phase reads its card
+(< 1k tokens) — `$R/cards/script.md` (4–5), `cards/shotplan.md` (6–7), `cards/build.md` (8), `$R/qa-rubric.md` (9; it
+IS the QA card), `cards/finish.md` (10–12). Open `style-bible.md` / `fix-playbook.md` only at the § a failed check or
+the card names — read that section (Read with offset/limit or grep), never the whole file. style-bible stays the spec.
 **Look-dev standard (user rule): style-bible §L + rubric S8.** Numbers passing is NOT enough — compare a still against
 reference frames before any gate/QA is called done. New detail = engine defaults/props, never one-off project code.
 
 ## Working across sessions — subagent handoff (keeps this session's context small; saves ~$7/video)
 Phases 1–5 (topic → research → format → script → voice) need the user's answers at each step: run them directly
-in this session. From Phase 6 on, three phase groups are each fully mechanical — hand each to a fresh subagent
+in this session. From Phase 6 on, four phase groups are each self-contained — hand each to a fresh subagent
 with the Agent tool instead of letting this session's context grow across all of them (that growth is most of
 why video #01 cost 3× what it should have — see `Improvements/faster-and-cheaper.md`):
 
-| Group | Phases | Subagent does |
-|---|---|---|
-| shot plan → gate | 6–7 | shotlist.json, plan_lint, (if a new set/look) build + score the 00-style test shot |
-| build | 8 | scene code, cam_dump, cam_qa, batched stills, view the sheet |
-| QA → deliver | 9–12 | render, qa_all, fix loop, audio, thumbnail, metadata |
+| Group | Phases | Card | Agent `model` / `effort` | Subagent does |
+|---|---|---|---|---|
+| shot plan → gate | 6–7 | cards/shotplan.md | `opus` / omit | shotlist.json, plan_lint, (if a new set/look) build + score the 00-style test shot |
+| build | 8 | cards/build.md | `opus` / omit | scene code, cam_dump, cam_qa, batched stills, view the sheet |
+| QA | 9 | qa-rubric.md | omit (inherit) / omit | render, qa_all, rubric review, fix loop |
+| finish | 10–12 | cards/finish.md | `sonnet` / `low` | audio, thumbnail, metadata — scripted, gate-checked |
+
+**Model per group (Improvements #10, user-approved 2026-11-06):** judgment phases (shot plan, look, build) run on
+Opus at full effort; the scripted finish group runs on Sonnet at low effort (output is ~23 % of cost and ~73 % of it
+was reasoning). Pass exactly the `model`/`effort` in the table — they are aliases, never version names. QA inherits
+the session model. Re-running a gate with no code change (e.g. after the user answers a question) is also a
+`sonnet`/`low` job.
 
 How to hand off a group:
 1. Before spawning: if `$P/work/handoff.md` isn't still the blank template, read it — it's the previous group's
    decisions and open issues. Confirm `project.json` `phase` is what you expect.
-2. Spawn **one subagent at a time** — never two. This machine renders at concurrency 4 on 8 GB RAM and the exFAT
+2. Spawn **one subagent at a time** — never two. Renders run at concurrency 3 (fastest measured) and the MacBook has 8 GB RAM and the exFAT
    SSD has already unmounted once under a write burst; a second render running at the same time would race it.
-   Omit `model` so it inherits whatever model this session is running — don't hardcode a model name.
+   Set `model`/`effort` from the table above (aliases only — never a version name).
 3. Give it the full self-contained prompt below (it starts with none of this conversation's context).
 4. When it reports back: open `project.json` yourself and confirm `phase` actually moved — never take the report's
    word for it ("numbers decide" applies to you too). Paste the gate output it reported **word-for-word** to the
@@ -78,8 +88,9 @@ How to hand off a group:
    the 4-try limit) — ask the user yourself, then send the answer back to **that same subagent** with
    SendMessage (it still has the context; don't start a fresh one for this). The thumbnail frame is NOT one of
    these — Phase 11 already has the agent pick it.
-6. Timestamped feedback ("at 0:12…") arriving after a group has shipped goes to the QA→deliver subagent the same
-   way: SendMessage if it's still around, otherwise spawn a fresh one and hand it `work/handoff.md`.
+6. Timestamped feedback ("at 0:12…") arriving after a group has shipped goes to the QA subagent (Phase 9 fix loop):
+   SendMessage if it's still around, otherwise spawn a fresh one and hand it `work/handoff.md`. Then re-run the
+   finish group (`sonnet`/`low`) so the mix, thumbnail and metadata match the fixed picture.
 
 ### Subagent prompt template (fill in every `<…>`, send the whole thing as the task)
 ```
@@ -87,6 +98,8 @@ You are running phase group "<group name>" (Phases <N>–<M>) of the stickworld-
 "Projects/<slug>" inside the studio at "<ROOT, quoted — the folder that holds CLAUDE.md>". Read these in full
 before doing anything else:
   1. ".claude/skills/stickworld-video/SKILL.md" — Phases <N> through <M>, and "Hard rules" at the bottom.
+  1b. "Engine/references/<card from the group table>" — the rules for these phases. Do NOT read style-bible.md or
+      fix-playbook.md in full: open only the § a failed check or the card points to (grep / Read offset+limit).
   2. "Projects/<slug>/work/handoff.md" — decisions and open issues from the previous phase group.
   3. "Projects/<slug>/project.json" — current state.
 
@@ -141,7 +154,7 @@ Long-form: run the whole pipeline per **chapter** (each chapter is one compositi
 shot plan); gates are the same except duration and dissolves/min (compare `--skip duration`).
 
 ## Phase 4 — `script`
-1. Write `$P/script.md` with the structure in style-bible §9 (fill `$T/script.md` template):
+1. Write `$P/script.md` with the structure in `$R/cards/script.md` (style-bible §9; fill `$T/script.md` template):
    strange-action hook (line 1, ≤ 3 s, no question, no "Did you know") → doubter → "You see," pivot → escalation →
    quoted punch-line → **mechanism reveal in the last ~30 %** → abrupt payoff → last line loops into the first.
    Also the title (4–8 words, Title Case, "The [Object] That …" / "Why [Group] [Odd Thing]" / "Levels of …").
@@ -199,7 +212,9 @@ Camera note: measured framing changes are motion PEAKS (mid-move), not waypoints
 exceed the detector threshold (gentle drifts do not count as beats).
 
 ## Phase 8 — `build`
-Write the scene code. **Single source of truth per concern** (Sonnet: follow this split exactly):
+Read `$R/cards/build.md` and `$R/props-catalog.md` first: reuse catalog props; new reusable props go in
+`props/<era-or-theme>.tsx` (header comment: theme + first video), then `node $S/props_catalog.mjs` (and `--check` in
+the gate). Write the scene code. **Single source of truth per concern** (Sonnet: follow this split exactly):
 | File | Contains | Checked by |
 |---|---|---|
 | `scenes/camera.ts` | `END`, `camera: CameraSpec` (waypoints, ease 'flow'), `TRANSITIONS` — multi-set videos: `CAMERAS` (one track per set, style-bible §L.2; pattern in Projects/01_dutch-water-line/scenes/plan.ts) | cam_qa.py |
@@ -222,7 +237,7 @@ node $S/cam_dump.mjs $P            # camera + actors → work/camera_dump.json
 python3 $S/cam_qa.py $P            # G1-G19 (G18 cast on screen per beat, G19 heads not cut); FIX text per failure
 bash $S/render.sh $P stills <Comp> 15,60,120,…   # one still per beat mid-frame → work/sheet_stills.jpg; LOOK at it
 ```
-**Gate:** cam_qa all gates PASS (`CAM_QA: N/N`); stills sheet viewed (Read the jpg) and every beat's `visual` from shotlist.json is visible.
+**Gate:** cam_qa all gates PASS (`CAM_QA: N/N`); `props_catalog.mjs --check` up to date; stills sheet viewed (Read the jpg) and every beat's `visual` from shotlist.json is visible.
 
 ## Phase 9 — `qa` (render → measure → review → fix loop)
 Render speed (measured 2026-11-06, idle M1, #01's 58 s / 1746 f scene, incl. bundling): full size `video` 97–106 s ·
@@ -287,6 +302,8 @@ Set phase `done` (`new_project.py --set-phase $P done` → closes the ledger), t
 | transcribe.py | 5 | built (V1 wps exact + 2 % WARN band, V2 pause; `--gate` sets the exit code) |
 | plan_lint.py | 6 | built (PL1–PL10) |
 | cam_dump.mjs / cam_qa.py | 8 | built (G1–G19: G18 cast_in_frame, G19 head_in_frame project characters through the camera) |
+| props_catalog.mjs | 8 | built (→ `references/props-catalog.md`, one line per prop; `--check` = stale catalog fails) |
+| cards/*.md | all | phase cards: script, shotplan, build, finish (< 1k tokens each; qa-rubric is the QA card) |
 | preflight.mjs | 8–9 | built (PF1 tsc types, PF2 rules of hooks; engine + project scenes; render.sh runs it first, `PREFLIGHT_SKIP=1` to bypass) |
 | render.sh / stills.mjs / splice.py | 7–9 | built (`stills\|video\|preview\|pace\|range\|splice`; stills.mjs: one browser+server per still batch; splice.py: re-rendered ranges → one re-encode) |
 | qa_frames.py | 9 | built (calibrated on 4 references: 0 false P1) |
