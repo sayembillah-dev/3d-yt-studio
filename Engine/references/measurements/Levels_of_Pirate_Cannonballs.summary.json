@@ -1,0 +1,22 @@
+{
+ "duration_s": 63.5,
+ "beats_per_s": 0.646,
+ "median_beat_gap_s": 1.533,
+ "first_beat_s": 0.667,
+ "beats_0_3s": 2,
+ "cuts": 3,
+ "dissolves": 12,
+ "dissolve_len_f": 8.5,
+ "longest_hold_s": 1.2,
+ "pct_moving": 42.57,
+ "sat": 0.469,
+ "val": 0.624,
+ "lufs": -14.0,
+ "tp": -1.9,
+ "cap_px": 41.0,
+ "wps": 3.478,
+ "wps_first3s": 4.082,
+ "pauses_over_0.33s": 0,
+ "longest_pause_s": 0.12,
+ "you_see_pct": null
+}

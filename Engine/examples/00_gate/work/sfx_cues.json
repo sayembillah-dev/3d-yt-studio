@@ -1,0 +1,97 @@
+{
+ "fps": 30,
+ "end": 108,
+ "cues": [
+  {
+   "f": 15,
+   "kind": "whoosh",
+   "gain": -10.813516223282482,
+   "src": "camera peak 2.29°/f @26",
+   "v": 0
+  },
+  {
+   "f": 36,
+   "kind": "pop",
+   "gain": -8,
+   "src": "deckhand face nervous→skeptical",
+   "v": 0
+  },
+  {
+   "f": 55,
+   "kind": "pop",
+   "gain": -8,
+   "src": "captain face smug→happy",
+   "v": 1
+  },
+  {
+   "f": 56,
+   "kind": "boing",
+   "gain": -6,
+   "src": "captain beat hop",
+   "v": 0
+  },
+  {
+   "f": 57,
+   "kind": "coin",
+   "gain": 0,
+   "src": "captain holds coin + extra: coin glints on \"gold.\"",
+   "v": 0
+  },
+  {
+   "f": 72,
+   "kind": "pop",
+   "gain": -8,
+   "src": "deckhand face skeptical→panic",
+   "v": 2
+  },
+  {
+   "f": 73,
+   "kind": "impact",
+   "gain": -6,
+   "src": "deckhand beat recoil",
+   "v": 0
+  },
+  {
+   "f": 74,
+   "kind": "gulp",
+   "gain": -9,
+   "src": "deckhand fx sweat",
+   "v": 0
+  },
+  {
+   "f": 74,
+   "kind": "sting",
+   "gain": -9,
+   "src": "deckhand fx shockLines",
+   "v": 0
+  },
+  {
+   "f": 88,
+   "kind": "pop",
+   "gain": -8,
+   "src": "captain face happy→smug",
+   "v": 3
+  },
+  {
+   "f": 89,
+   "kind": "click",
+   "gain": -6,
+   "src": "captain beat nod",
+   "v": 0
+  },
+  {
+   "f": 98,
+   "kind": "pop",
+   "gain": -8,
+   "src": "deckhand face panic→sad",
+   "v": 4
+  }
+ ],
+ "ambience": [
+  {
+   "from": 0,
+   "to": 108,
+   "kind": "sea"
+  }
+ ]
+}

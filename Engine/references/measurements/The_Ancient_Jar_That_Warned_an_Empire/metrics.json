@@ -1,0 +1,226 @@
+{
+ "file": "The Ancient Jar That Warned an Empire.mp4",
+ "fps": 30.0,
+ "frames": 1945,
+ "duration_s": 64.833,
+ "motion": {
+  "diff_p50": 5.471,
+  "diff_p90": 14.621,
+  "diff_max": 48.975,
+  "pct_frames_moving": 19.85,
+  "pct_frames_held": 8.95,
+  "longest_hold_s": 0.9
+ },
+ "cuts": {
+  "count": 0,
+  "frames": []
+ },
+ "dissolves": {
+  "count": 23,
+  "median_len_f": 8.0,
+  "items": [
+   {
+    "start_f": 98,
+    "len_f": 11,
+    "resid": 0.23499999940395355
+   },
+   {
+    "start_f": 113,
+    "len_f": 12,
+    "resid": 0.32499998807907104
+   },
+   {
+    "start_f": 221,
+    "len_f": 8,
+    "resid": 0.22599999606609344
+   },
+   {
+    "start_f": 403,
+    "len_f": 9,
+    "resid": 0.14900000393390656
+   },
+   {
+    "start_f": 533,
+    "len_f": 7,
+    "resid": 0.17499999701976776
+   },
+   {
+    "start_f": 548,
+    "len_f": 7,
+    "resid": 0.3199999928474426
+   },
+   {
+    "start_f": 671,
+    "len_f": 9,
+    "resid": 0.32600000500679016
+   },
+   {
+    "start_f": 720,
+    "len_f": 8,
+    "resid": 0.2759999930858612
+   },
+   {
+    "start_f": 805,
+    "len_f": 6,
+    "resid": 0.1509999930858612
+   },
+   {
+    "start_f": 888,
+    "len_f": 8,
+    "resid": 0.13300000131130219
+   },
+   {
+    "start_f": 946,
+    "len_f": 9,
+    "resid": 0.3440000116825104
+   },
+   {
+    "start_f": 958,
+    "len_f": 6,
+    "resid": 0.2980000078678131
+   },
+   {
+    "start_f": 990,
+    "len_f": 8,
+    "resid": 0.16300000250339508
+   },
+   {
+    "start_f": 1115,
+    "len_f": 8,
+    "resid": 0.2529999911785126
+   },
+   {
+    "start_f": 1211,
+    "len_f": 7,
+    "resid": 0.14499999582767487
+   },
+   {
+    "start_f": 1305,
+    "len_f": 8,
+    "resid": 0.17000000178813934
+   },
+   {
+    "start_f": 1378,
+    "len_f": 8,
+    "resid": 0.10499999672174454
+   },
+   {
+    "start_f": 1451,
+    "len_f": 13,
+    "resid": 0.32899999618530273
+   },
+   {
+    "start_f": 1483,
+    "len_f": 12,
+    "resid": 0.328000009059906
+   },
+   {
+    "start_f": 1526,
+    "len_f": 15,
+    "resid": 0.3499999940395355
+   },
+   {
+    "start_f": 1562,
+    "len_f": 11,
+    "resid": 0.34700000286102295
+   },
+   {
+    "start_f": 1652,
+    "len_f": 14,
+    "resid": 0.2840000092983246
+   },
+   {
+    "start_f": 1748,
+    "len_f": 7,
+    "resid": 0.05299999937415123
+   }
+  ]
+ },
+ "beats": {
+  "count": 40,
+  "per_s": 0.617,
+  "median_gap_s": 1.3,
+  "p90_gap_s": 2.9,
+  "max_gap_s": 4.033,
+  "first_s": 0.833,
+  "in_first_3s": 2,
+  "frames": [
+   25,
+   62,
+   103,
+   119,
+   160,
+   188,
+   225,
+   346,
+   379,
+   407,
+   421,
+   495,
+   537,
+   551,
+   599,
+   638,
+   677,
+   724,
+   807,
+   892,
+   950,
+   994,
+   1021,
+   1119,
+   1214,
+   1245,
+   1309,
+   1382,
+   1422,
+   1457,
+   1477,
+   1489,
+   1512,
+   1533,
+   1567,
+   1587,
+   1649,
+   1751,
+   1793,
+   1824
+  ]
+ },
+ "colour": {
+  "sat_mean": 0.402,
+  "val_mean": 0.561,
+  "sat_p10": 0.274,
+  "sat_p90": 0.555,
+  "act_hue_deg_per_10s": [
+   44.0,
+   210.0,
+   28.0,
+   234.0,
+   234.0,
+   26.0,
+   32.0
+  ]
+ },
+ "captions": {
+  "cap_height_px_est": 43.5
+ },
+ "audio": {
+  "lufs_i": -14.1,
+  "lra": 2.1,
+  "true_peak_dbtp": -2.2
+ },
+ "voice": {
+  "words": 235,
+  "wps": 3.63,
+  "wps_first3s": 4.422,
+  "first_word_s": 0.06,
+  "pauses_over_0.33s": 0,
+  "longest_pause_s": 0.25,
+  "you_see_pct": 11.2,
+  "you_see_all_pct": [
+   11.2
+  ],
+  "text": "He put a bronze ball in a dragon's mouth and told the Emperor, \"If this ever falls out, run!\" The whole court burst out laughing. You see, there were eight dragons coiled around a giant bronze jar, each holding a ball over a frog's open mouth. But the Emperor had the biggest army in the world, and he wasn't about to run from a jar. Weeks later, a ball fell, but nothing happened, not even a ripple in the Emperor's wine. Now they laughed even harder. The Emperor called it the world's most expensive toy and threw the inventor out of the city, jar and all. So, he dragged it up a hill outside the walls and lived there alone. Then, one night, a ball dropped. Then another, then all ate at once. He ran to the city gates, screaming for everyone to get out. \"Hey, it's the toy guy! Did your frogs get hungry again?\" The guards laughed him all the way back up the hill. The next morning, the palace was a pile of rubble. Inside the jar hung a heavy pendulum, with a rod pointing at each dragon. The slightest nudge and the pendulum swung into a rod, the rod snapped the dragon's jaw open, and the ball dropped. One ball meant a nudge from far away. All eight meant the biggest earthquake the Empire had ever seen was right underneath them."
+ }
+}

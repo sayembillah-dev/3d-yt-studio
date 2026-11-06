@@ -1,0 +1,16 @@
+{
+ "as_of": "2026-10-06",
+ "source": "claude-api skill model table (cached 2026-10-06) + prompt-caching multipliers (cache write 1.25x input for 5-minute TTL, 2x for 1-hour TTL). Confirm against the live pricing page (https://platform.claude.com/docs/en/about-claude/pricing) and update this file when prices change; ledger.py prints this date on every ledger.",
+ "note": "USD per 1M tokens, Anthropic first-party API rates. On a Claude subscription (Pro/Max) usage is not billed per token: the ledger then shows the API-EQUIVALENT cost, which is still the right number for comparing videos and estimating.",
+ "models": {
+  "claude-opus-5-5":   {"input": 4.00,  "output": 20.00, "cache_write_5m": 5.00,  "cache_write_1h": 8.00,  "cache_read": 0.20},
+  "claude-sonnet-5-5": {"input": 2.00,  "output": 10.00, "cache_write_5m": 2.50,  "cache_write_1h": 4.00,  "cache_read": 0.20},
+  "claude-haiku-5-5":  {"input": 0.10,  "output": 0.50,  "cache_write_5m": 0.125, "cache_write_1h": 0.20,  "cache_read": 0.01, "note": "prompts up to 100K tokens; $0.50/$2.50 beyond; cache_read assumed 0.1x input (confirm)"},
+  "claude-fable-5-1":  {"input": 10.00, "output": 50.00, "cache_write_5m": 12.50, "cache_write_1h": 20.00, "cache_read": 0.25},
+  "claude-opus-5":     {"input": 5.00,  "output": 25.00, "cache_write_5m": 6.25,  "cache_write_1h": 10.00, "cache_read": 0.50},
+  "claude-sonnet-5":   {"input": 2.00,  "output": 10.00, "cache_write_5m": 2.50,  "cache_write_1h": 4.00,  "cache_read": 0.20}
+ },
+ "fast_mode_multiplier": {"claude-opus-5-5": 2.0, "claude-opus-5": 2.0},
+ "web_search_per_1000": {"usd": 10.00, "confirmed": false, "note": "not in the skill's cached tables — confirm on the pricing page"},
+ "unknown_model_fallback": "claude-opus-5-5"
+}

@@ -1,0 +1,216 @@
+# Making a new video faster and cheaper: deep analysis
+
+This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (58 s Short).
+- **Cost:** 3h59m wall time, 1h56m Claude-active, 233 API calls, **$29.06** API-equivalent.
+- **Data:** I re-read every API call in the Claude Code session logs (context size, cache reads/writes and output per
+  call), every tool result, and `work/render_log.jsonl`. My model of the calls adds up to $29.46, within 1.5 % of the
+  ledger.
+
+Nothing on this page has been implemented yet. Section 5 is the to-do list.
+
+## Status (2026-11-06): Steps 1–3 built and tested; Steps 4–6 not started
+
+**1. Phase-group sessions + handoff note.** Built into `.claude/skills/stickworld-video/SKILL.md` — "Working
+across sessions" section + a subagent prompt template. From Phase 6 (shotplan) on, the skill hands each
+mechanical phase group to a fresh subagent instead of growing one session's context across the whole video; each
+group reads/writes `work/handoff.md` (template now in `Engine/templates/project/work/handoff.md`, so every new
+project gets one). Caveat: only smoke-tested with a toy task (run one command, report back) — the template
+itself is unproven on a real phase group. **The real test is video #02's first hand-off.**
+
+**2. Unused plugins off for this folder.** Done via `.claude/settings.json` → `skillOverrides`, turning off the
+~118 social-media/SEO skills (`social-media-skills:*`, `openseo:*`) that were loaded every session without ever
+being used here. Takes effect from the next new session in this folder.
+
+**3. Batched stills + `qa_all.sh`.**
+- `Engine/scripts/stills.mjs` (called by `render.sh stills`): one Remotion browser+server for the whole batch of
+  preview pictures instead of one per frame. Measured ~0.6 s/frame vs. the ~6.8 s/frame this page measured —
+  about 10× faster; pixel-identical output, `SW_PROPS`/`SW_SCALE` both still work.
+- `Engine/scripts/qa_all.py` + `qa_all.sh` (`qa_all.sh <project> gate|qa|final [Comp]`): bundles cam_qa + qa_frames
+  + compare (or mix + compare, for `final`) into one call, one PASS/FAIL table, fix text only for what failed,
+  full logs in `work/logs/`. Wired into Phases 7, 9 and 10 of SKILL.md, replacing the separate script calls.
+- Both validated against `Engine/examples/00_gate` (cam_qa 17/17, qa_frames 0 P0/P1, compare PASS) and against
+  real failures (a deliberately-wrong mode correctly reported and explained the fix).
+
+**Bonus, not in the original plan — added at the user's request:**
+- **Advisor checkpoints** (4): after the script draft, after the shot plan, after a gate test shot, and before
+  declaring the QA round done — each calls `advisor()` (a stronger reviewer) for a second opinion before the
+  video commits further work on top of that decision.
+- **Dashboard**: `Engine/scripts/dashboard.command` (double-click launcher) → a local, read-only, plain-English
+  page (`dashboard.py` + `dashboard_page.html`) showing the current phase, what Claude is doing right now, recent
+  renders, `handoff.md`'s decisions/open issues, and the running cost — no technical terms. Tested against video
+  #01's real data (reproduced its exact $29.06 / 3h59m / 1h56m) and confirmed it never writes back to the ledger.
+
+---
+
+## 1. The one law behind the cost
+
+Every API call re-sends the **whole conversation so far** (cached, $0.20 per 1M tokens on Opus 5.5). So:
+
+> **cost of reads ≈ number of calls × average context size**
+
+In #01 the context **never reset**. It started at **74k tokens** and grew steadily to **679k** over 4 hours. There was
+no compaction and no new session; the second session was a continuation that carried everything forward.
+
+| Phase | Calls | Avg context per call | Cost | Spent re-reading context | Spent on output |
+|---|---|---|---|---|---|
+| topic → script (4 phases) | 21 | 84k–120k | $1.06 | $0.41 | $0.31 |
+| voice + shot plan | 20 | 127k–140k | $1.12 | $0.51 | $0.37 |
+| gate (incl. one-time look upgrade) | 49 | 232k | $4.46 | $2.25 | $1.15 |
+| **build** | **81** | **413k** | **$12.60** | $6.64 | $3.86 |
+| **QA** | **49** | **614k** | **$7.93** | **$5.99** | $0.99 |
+| audio | 3 | 669k | $0.46 | $0.40 | $0.02 |
+| thumbnail | 8 | 674k | $1.20 | $1.08 | $0.07 |
+
+**Key finding:** QA and thumbnail did little thinking but cost $9.13, because each call re-read 600k+ tokens of build
+history they didn't need. The thumbnail cost $1.20 for about 8 small commands. In a fresh session it would cost about
+$0.15.
+
+## 2. What fills the context (where the 679k came from)
+
+| Source | Tokens | Notes |
+|---|---|---|
+| Starting context, before any work | **74k** | System prompt, CLAUDE.md, tool definitions, and **the list of every installed skill**. This includes about 120 social-media and SEO skills that this studio never uses. Re-read on all 233 calls: about **$3.45**. |
+| My own output (thinking, prose, code) | 340k | Only about **92k** of this is actual code and commands (tool inputs). The other **about 250k is reasoning and prose**. |
+| Tool results | about 170k | Biggest items: 36 images viewed (contact sheets, flagged frames, about 58k), 77 `cat`/`sed`/`grep` file reads (about 50k), renders and QA prints (about 16k). |
+| Your messages, reminders, wrap-ups | the rest | — |
+
+A result read early is paid again on every later call. For example:
+- reading `qa-rubric.md` in full (3k tokens) was re-read **149 times**;
+- each 1.6k-token contact sheet was re-read about **150 times**.
+
+Viewed one at a time these are cheap ($0.05–0.11 each); the cost comes from carrying hundreds of them.
+
+## 3. Where the time went
+
+| Time sink | Measured | Notes |
+|---|---|---|
+| Full-video renders | **8 × avg 10.6 min = 85 min** | 4 of the 8 existed only to move `median_beat_gap_s` between 1.05 and 1.28. |
+| Still renders | **86 stills in 9.8 min (6.8 s each)** | `render.sh stills` starts a new Remotion/Chrome process **for every frame**, so most of the time is start-up. |
+| Gate renders | 8 videos 5.5 min + 20 stills 3.2 min | Fine. |
+| Claude generating output | Large share of the 1h56m active time | 340k output tokens, at typical generation speeds, is roughly an hour by itself. About 250k of it is reasoning. |
+| Waiting on you | Topic 18m (3m active), voice 15m | The normal question and answer stops. |
+| Hardware | M1, 8 cores, 8 GB RAM, render concurrency 4 | CPU ran at 143–237 % during renders. With 8 GB, memory rather than cores is probably the limit, so this needs testing, not just a higher number. |
+
+**Key finding:** the QA phase was 1h50m of wall time but only 15 minutes of Claude-active time. **Rendering is the
+time bottleneck, and the main cause is pacing fix loops.**
+
+## 4. What a new video can cost
+
+Simulated on #01's exact call log (same work, same calls, only the context changed):
+
+| Scenario | Cost |
+|---|---|
+| As it happened | $29.46 |
+| New session at 4 boundaries (topic→script · voice→gate · build · QA→deliver) | $22.58 |
+| … plus starting context cut from 74k to 40k (unused plugins off for this folder) | $19.65 |
+| … plus 30 % less context growth (quiet tool output, partial file reads) | **$18.36** |
+
+That's **−38 % on the same work**. The work itself also shrinks on video #02:
+
+| Phase group | #01 | #02 estimate | Why it shrinks |
+|---|---|---|---|
+| topic → script | 21 calls, $1.06 | about 20 calls, $1.20 | Same work. A fresh session costs a little more to start. |
+| voice → shot plan → gate | 69 calls, $5.58 | about 35 calls, $2.60 | The look upgrade is done; the gate is one check, not a redesign. |
+| build | 81 calls, $12.60 | about 50 calls, $4.90 | Engine props, sets, characters and look defaults are reused. New-era props are the main new code. |
+| QA → deliver | 63 calls, $9.59 | about 20 calls, $1.20 | Pacing is predicted before render; one `qa_all` call per round. |
+| **Total** | **$29.06** | **about $10 (range $9–14)** | |
+
+**Time for #02:**
+
+| | #01 | #02 estimate |
+|---|---|---|
+| Full renders | 85 min | about 25 min: one preview at quarter resolution plus one final, maybe one fix render |
+| Stills | 10 min | about 2 min |
+| Claude-active time | 1h56m | about 60–70 min, from fewer calls and less reasoning per call |
+| **Wall time** | **3h59m** | **about 1h45m**, plus however long you take to answer questions |
+
+These estimates assume a Short of similar complexity, about 8 sets and 30 characters. A topic needing many new props
+(a new era or new vehicles) adds about $2–4 to the build.
+
+## 5. The changes, ranked by payoff ÷ effort
+
+### Tier 1: biggest wins, little work
+
+**1. Start a new session at each phase group: topic→script · voice→gate · build · QA→deliver.**
+- Saves about **$7 per video** (measured on #01 above). It also makes each response faster, because a smaller context
+  responds faster.
+- The skill would end each group by writing a short `work/handoff.md` (decisions, open issues, file pointers).
+  `project.json` `phase` already makes resuming exact.
+- Your side: when I say "phase group done", open a new session and type "continue the video".
+
+**2. Turn off the unused social-media and SEO plugins for this folder only.**
+- Cuts the starting context from 74k to about 40k. That's about **$2–3 per video**, and saves the same on every
+  non-video session here.
+- This is a settings change you make. I can walk you through it.
+
+**3. Batch the still renders: one Remotion process per batch, not per frame.**
+- 86 stills would take about 1.5 min instead of 9.8 min.
+- `render.sh` change; the engine gate must still pass.
+
+**4. One `qa_all.sh` with quiet output.**
+- Runs cam_qa, qa_frames, compare and mix in a single call, prints one PASS/FAIL table plus failures only, and writes
+  full logs to `work/logs/`.
+- Replaces 4–6 calls per QA round and stops log text from piling up in context.
+
+### Tier 2: the biggest time win
+
+**5. `beat_predict.mjs`: predict the pacing numbers from the camera path, with no render.**
+- `median_beat_gap_s`, `first_beat_s` and `beats_in_first_3s` come mostly from camera speed peaks and dissolves,
+  which `cam_dump` already computes in seconds.
+- Calibrate it against #01's renders: 1.05, 1.07, 1.20 and 1.28 measured, so 4 data points from the same scene.
+- Make it a gate before any full render. Expected: **4 full renders (about 45 min) saved per video**.
+
+**6. Quarter-resolution for every measurement render.**
+- Use `SW_SCALE=0.25` for previews, and render full resolution only once, for the final.
+- First check that every compare metric reads the same at quarter resolution as at full (one test render pair).
+
+**7. Re-render only changed segments.**
+- Render just the affected frame range and splice it into the last good render at a dissolve boundary.
+- Needs a splice step in `render.sh` and a check that the seams are clean.
+
+### Tier 3: catch bugs without a render
+
+**8. Geometry preflight in cam_qa.**
+- Checks the camera path against prop bounding boxes, and actor feet against ground height.
+- In #01, a flower through the lens, a fence fly-through, characters inside the dike slope and a hidden placard each
+  cost a render cycle to find (7–15 min each).
+
+**9. Look at fewer pictures.**
+- Show me the contact sheet only when a numeric check flags something, or once per phase, not every round.
+- In #01, 36 images were about 58k tokens of carried context.
+
+### Tier 4: tuning
+
+**10. Lighter reasoning for the routine phases** (audio, thumbnail, metadata, re-running gates).
+- Use Sonnet 5.5, or a lower effort setting. Output is 23 % of cost, and about 73 % of output was reasoning.
+- Keep Opus at full effort for script, shot plan, look and build.
+
+**11. Phase cards instead of whole docs.**
+- Give each phase one compact checklist (under 1k tokens) and read the full style bible or rubric only when a check
+  fails.
+- In #01, whole docs were read up front and re-read about 150 times each.
+
+**12. Test render concurrency on this M1 (8 GB).**
+- Time `SW_CONCURRENCY=3/4/6` on the 00_gate shot and keep the fastest.
+
+**13. Grow a prop library by era** (`props/<era>.tsx`), so each topic adds reusable pieces and build cost falls video
+by video.
+
+### On your side, free
+
+- Put the topic, format and voice choice in the first message. That avoids about 15 min of waiting at the topic step.
+- Keep one saved ElevenLabs preset, so the voice step is just dropping in the mp3.
+
+## 6. Order to implement
+
+| Step | What | Saves (est.) | Work |
+|---|---|---|---|
+| 1 | Phase-group sessions + handoff note (skill edit) | about $7 per video | about 20 min |
+| 2 | Unused plugins off for this folder (you) | about $2–3 per video | 5 min |
+| 3 | Batched stills + `qa_all.sh` + quiet output | about $1, about 10 min | about 40 min |
+| 4 | `beat_predict.mjs` + quarter-res measurement renders | about 45 min per video | about 1–1.5 h |
+| 5 | Geometry preflight | about 15–30 min per video | about 1 h |
+| 6 | Model/effort per phase, phase cards | about $1–2 per video | about 30 min |
+
+Steps 1–3 alone should bring #02 to roughly **$12–15**. With all six, the estimate is **about $10 and under 2 hours**.
+The ledger already measures every one of these, so video #02 will show what actually worked.

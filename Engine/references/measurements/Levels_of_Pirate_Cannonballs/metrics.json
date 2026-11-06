@@ -1,0 +1,174 @@
+{
+ "file": "Levels of Pirate Cannonballs.mp4",
+ "fps": 30.0,
+ "frames": 1905,
+ "duration_s": 63.5,
+ "motion": {
+  "diff_p50": 8.166,
+  "diff_p90": 22.032,
+  "diff_max": 55.11,
+  "pct_frames_moving": 42.57,
+  "pct_frames_held": 8.92,
+  "longest_hold_s": 1.2
+ },
+ "cuts": {
+  "count": 3,
+  "frames": [
+   66,
+   540,
+   541
+  ]
+ },
+ "dissolves": {
+  "count": 12,
+  "median_len_f": 8.5,
+  "items": [
+   {
+    "start_f": 812,
+    "len_f": 6,
+    "resid": 0.28600001335144043
+   },
+   {
+    "start_f": 837,
+    "len_f": 6,
+    "resid": 0.3449999988079071
+   },
+   {
+    "start_f": 901,
+    "len_f": 8,
+    "resid": 0.33000001311302185
+   },
+   {
+    "start_f": 910,
+    "len_f": 6,
+    "resid": 0.25999999046325684
+   },
+   {
+    "start_f": 988,
+    "len_f": 13,
+    "resid": 0.0860000029206276
+   },
+   {
+    "start_f": 1002,
+    "len_f": 10,
+    "resid": 0.09200000017881393
+   },
+   {
+    "start_f": 1016,
+    "len_f": 10,
+    "resid": 0.13600000739097595
+   },
+   {
+    "start_f": 1047,
+    "len_f": 15,
+    "resid": 0.22699999809265137
+   },
+   {
+    "start_f": 1113,
+    "len_f": 8,
+    "resid": 0.1120000034570694
+   },
+   {
+    "start_f": 1470,
+    "len_f": 9,
+    "resid": 0.08500000089406967
+   },
+   {
+    "start_f": 1606,
+    "len_f": 9,
+    "resid": 0.210999995470047
+   },
+   {
+    "start_f": 1790,
+    "len_f": 4,
+    "resid": 0.2669999897480011
+   }
+  ]
+ },
+ "beats": {
+  "count": 41,
+  "per_s": 0.646,
+  "median_gap_s": 1.533,
+  "p90_gap_s": 2.25,
+  "max_gap_s": 3.233,
+  "first_s": 0.667,
+  "in_first_3s": 2,
+  "frames": [
+   20,
+   66,
+   123,
+   147,
+   201,
+   250,
+   273,
+   303,
+   365,
+   418,
+   478,
+   524,
+   540,
+   586,
+   605,
+   639,
+   685,
+   735,
+   776,
+   804,
+   840,
+   852,
+   912,
+   954,
+   994,
+   1007,
+   1021,
+   1054,
+   1117,
+   1168,
+   1218,
+   1290,
+   1347,
+   1407,
+   1474,
+   1528,
+   1610,
+   1628,
+   1701,
+   1798,
+   1825
+  ]
+ },
+ "colour": {
+  "sat_mean": 0.469,
+  "val_mean": 0.624,
+  "sat_p10": 0.319,
+  "sat_p90": 0.6,
+  "act_hue_deg_per_10s": [
+   30.0,
+   30.0,
+   36.0,
+   192.0,
+   18.0,
+   196.0,
+   190.0
+  ]
+ },
+ "captions": {
+  "cap_height_px_est": 41.0
+ },
+ "audio": {
+  "lufs_i": -14.0,
+  "lra": 2.1,
+  "true_peak_dbtp": -1.9
+ },
+ "voice": {
+  "words": 220,
+  "wps": 3.478,
+  "wps_first3s": 4.082,
+  "first_word_s": 0.06,
+  "pauses_over_0.33s": 0,
+  "longest_pause_s": 0.12,
+  "you_see_pct": null,
+  "you_see_all_pct": [],
+  "text": "If your ship got hit by a cannonball, you'd actually be one of the lucky ones. In the 1700s, the Navy's round shot would smash through a pirate ship's wall and turn it into a storm of splinters that tore through half the crew. The pirates couldn't afford proper ammo, so they fired back with Langrage, which is a fancy word for literal garbage. But the Navy had a nastier idea called Hotshot. They shoveled cannonballs into a furnace until they glowed red, carried them over with giant tongs and dropped them in behind a soaking wet plug so the gunpowder wouldn't go off thoroughly. The ball buried itself deep in the pirate ship's hull, and a few minutes later, the whole ship lit up from the inside like a giant lantern. Not to be outdone, the pirates fired back with the carcass, a hollow cannonball packed with burning tar and punched full of holes, so it spat fire the whole way over and turned the entire Navy ship into a torch. Eventually, ships advanced from wood to iron, and the fireballs just bounced off. So America built the Rodman Gun, a cannon that fired a single ball weighing over a thousand pounds made to punch a hole in an iron warship big enough to sink it in one shot."
+ }
+}

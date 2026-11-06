@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video progress</title>
+<style>
+  :root {
+    --bg: #faf9f7; --card: #ffffff; --ink: #2a2a28; --dim: #6b6b66; --line: #e7e4df;
+    --accent: #7a5c3e; --good: #2f7a4f; --bad: #b5472f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1c1b19; --card: #262523; --ink: #ece9e3; --dim: #a6a29a; --line: #39372f; --accent: #d8b887; --good: #6fcf97; --bad: #e08a72; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, "Avenir Next", sans-serif; padding: 20px 16px 60px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin-bottom: 20px; font-size: 14px; }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+  .card h2 { font-size: 14px; letter-spacing: .02em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+  .phase-now { font-size: 19px; font-weight: 600; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { padding: 7px 0; border-top: 1px solid var(--line); font-size: 15px; display: flex; gap: 10px; }
+  .list li:first-child { border-top: none; }
+  .when { color: var(--dim); font-size: 13px; white-space: nowrap; min-width: 84px; }
+  .fail { color: var(--bad); font-weight: 600; }
+  .ok { color: var(--good); }
+  .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+  .cost-grid .big { font-size: 22px; font-weight: 700; }
+  .cost-grid .lbl { color: var(--dim); font-size: 13px; }
+  .empty { color: var(--dim); font-size: 14px; }
+  pre.handoff { white-space: pre-wrap; font: inherit; margin: 0; font-size: 14.5px; }
+  .stale { opacity: .45; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>What's happening with your video</h1>
+  <div class="sub" id="updated">loading…</div>
+
+  <select id="projPicker"></select>
+
+  <div class="card" id="noProject" style="display:none">
+    <div class="empty">No video in progress yet.</div>
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="card">
+      <h2>Right now</h2>
+      <div class="phase-now" id="phaseNow"></div>
+    </div>
+
+    <div class="card">
+      <h2>What Claude is doing</h2>
+      <ul class="list" id="activity"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Renders</h2>
+      <ul class="list" id="renders"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Decisions &amp; open questions</h2>
+      <pre class="handoff" id="handoff"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Cost so far</h2>
+      <div class="cost-grid" id="cost"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentSlug = null;
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function renderList(ul, items, emptyText) {
+  ul.innerHTML = '';
+  if (!items || !items.length) { ul.appendChild(el('li', 'empty', emptyText)); return; }
+  for (const it of items) {
+    const li = el('li');
+    li.appendChild(el('span', 'when', it.when));
+    const cls = /FAILED/.test(it.text) ? 'fail' : '';
+    li.appendChild(el('span', cls, it.text));
+    ul.appendChild(li);
+  }
+}
+
+function render(data) {
+  document.getElementById('updated').textContent = 'updated just now';
+
+  const picker = document.getElementById('projPicker');
+  picker.innerHTML = '';
+  for (const p of (data.projects || [])) {
+    const opt = el('option', null, (p.title || p.slug) + ' — ' + p.phase);
+    opt.value = p.slug;
+    if (p.slug === (data.project && data.project.slug)) opt.selected = true;
+    picker.appendChild(opt);
+  }
+
+  if (!data.project) {
+    document.getElementById('noProject').style.display = '';
+    document.getElementById('main').style.display = 'none';
+    return;
+  }
+  document.getElementById('noProject').style.display = 'none';
+  document.getElementById('main').style.display = '';
+  currentSlug = data.project.slug;
+
+  document.getElementById('phaseNow').textContent = data.project.phase_label;
+
+  renderList(document.getElementById('activity'), data.activity, 'Nothing happening right now.');
+  renderList(document.getElementById('renders'), data.renders, 'No renders yet.');
+
+  document.getElementById('handoff').textContent = (data.handoff || '').trim() || '(nothing recorded yet)';
+
+  const costGrid = document.getElementById('cost');
+  costGrid.innerHTML = '';
+  const c = data.cost;
+  if (c && c.usd !== null && c.usd !== undefined) {
+    const items = [
+      ['$' + c.usd.toFixed(2), 'Estimated cost so far'],
+      [c.active, 'Time actually spent working'],
+      [c.wall, 'Total time elapsed'],
+      [c.renders + (c.render_minutes ? ' (' + c.render_minutes + ' min)' : ''), 'Renders made'],
+    ];
+    for (const [big, lbl] of items) {
+      const box = el('div');
+      box.appendChild(el('div', 'big', String(big)));
+      box.appendChild(el('div', 'lbl', lbl));
+      costGrid.appendChild(box);
+    }
+  } else {
+    costGrid.appendChild(el('div', 'empty', 'Cost estimate not available yet.'));
+  }
+}
+
+async function poll() {
+  try {
+    const qs = currentSlug ? ('?project=' + encodeURIComponent(currentSlug)) : '';
+    const r = await fetch('/api/status' + qs);
+    const data = await r.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('updated').textContent = 'couldn\'t reach the dashboard — is it still running?';
+  }
+}
+
+document.getElementById('projPicker').addEventListener('change', (e) => {
+  currentSlug = e.target.value;
+  poll();
+});
+
+poll();
+setInterval(poll, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+ "video": "/Volumes/ssd/3D Youtube Studio/Engine/examples/00_gate/work/Gate.mp4",
+ "frames": 108,
+ "findings": [
+  {
+   "frame": 56,
+   "t": 1.87,
+   "kind": "pop",
+   "severity": "P2",
+   "detail": "block diff 132 vs local 46, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
+  },
+  {
+   "frame": 67,
+   "t": 2.23,
+   "kind": "pop",
+   "severity": "P2",
+   "detail": "block diff 110 vs local 41, 17% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
+  },
+  {
+   "frame": 72,
+   "t": 2.4,
+   "kind": "pop",
+   "severity": "P2",
+   "detail": "block diff 84 vs local 30, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
+  },
+  {
+   "frame": 89,
+   "t": 2.97,
+   "kind": "pop",
+   "severity": "P2",
+   "detail": "block diff 112 vs local 33, 11% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
+  }
+ ]
+}

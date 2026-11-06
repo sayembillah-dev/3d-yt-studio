@@ -1,0 +1,18 @@
+{
+  "fps": 30,
+  "note": "One beat every ~1.7 s (36–66 f, max 90), aligned to public/words.json. plan_lint.py checks it. sync = the noun/verb that must be on screen at its word ±3 f. transition_in: flight | dissolve | cut (≤ 1 cut per Short, dissolves 8 f).",
+  "sets": [
+    {"id": "deck", "mood": "day", "description": "pirate deck, rum barrels, gold crate, sea vista"}
+  ],
+  "shots": [
+    {"id": "b01", "from": 0, "to": 40, "words": "<the hook words>", "sync": "<noun>", "set": "deck",
+     "visual": "captain smugly points at the strange object", "camera": "push",
+     "cast": [{"id": "hero", "face": "smug", "action": "point"}], "sfx": ["whoosh"], "transition_in": "flight"},
+    {"id": "b02", "from": 40, "to": 80, "words": "<…>", "sync": "<noun>", "set": "deck",
+     "visual": "deckhand recoils in shock", "camera": "orbit",
+     "cast": [{"id": "doubter", "face": "shock", "action": "recoil"}], "sfx": ["pop", "impact"], "transition_in": "flight"},
+    {"id": "b03", "from": 80, "to": 108, "words": "<…>", "sync": "<noun>", "set": "deck",
+     "visual": "captain presents the coin, grinning", "camera": "pull",
+     "cast": [{"id": "hero", "face": "grin", "action": "present coin"}], "sfx": ["coin"], "transition_in": "flight"}
+  ]
+}

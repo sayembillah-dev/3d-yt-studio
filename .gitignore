@@ -1,0 +1,21 @@
+# video projects (not studio code)
+/Projects/
+
+# exFAT AppleDouble sidecar files + macOS junk
+._*
+.DS_Store
+
+# installed/downloaded on first run (Engine/scripts/doctor.sh re-fetches these)
+Engine/studio/node_modules/
+Engine/models/
+
+# raw session logs / notes dumped into the repo, not studio source
+Engine/notes/
+
+# a single reference video over GitHub's 100MB file limit (kept locally only)
+Engine/references/videos/guide.mp4
+
+# python / node caches
+__pycache__/
+*.pyc
+npm-debug.log*

@@ -1,0 +1,397 @@
+{
+ "source": [
+  "Levels_of_Pirate_Cannonballs",
+  "The_Ancient_Jar_That_Warned_an_Empire",
+  "The_Window_That_Breaks_Japans_Gambling_Law",
+  "Why_Perfect_Railroads_Dont_Work"
+ ],
+ "note": "GATES are what compare.py enforces. observed = these reference shorts measured by measure_short.py.",
+ "GATES": {
+  "wps": {
+   "range": [
+    3.2,
+    4.1
+   ],
+   "kind": "hard",
+   "guide": 3.66,
+   "why": "narrator is fast; refs 3.28-3.63, guide 3.66 (4.0 in first 3 s)"
+  },
+  "longest_pause_s": {
+   "range": [
+    null,
+    0.33
+   ],
+   "kind": "hard",
+   "guide": 0.33,
+   "why": "no pause longer than a third of a second"
+  },
+  "median_beat_gap_s": {
+   "range": [
+    1.2,
+    2.2
+   ],
+   "kind": "hard",
+   "guide": 1.7,
+   "why": "new framing about every 1.7 s"
+  },
+  "max_beat_gap_s": {
+   "range": [
+    null,
+    4.0
+   ],
+   "kind": "soft",
+   "guide": 3.0,
+   "why": "never sit on one framing"
+  },
+  "first_beat_s": {
+   "range": [
+    null,
+    2.0
+   ],
+   "kind": "hard",
+   "guide": 1.3,
+   "why": "first framing change by ~1.1-1.5 s"
+  },
+  "beats_in_first_3s": {
+   "range": [
+    2,
+    null
+   ],
+   "kind": "hard",
+   "guide": 2,
+   "why": "2 framings in the first 3 s"
+  },
+  "hard_cuts": {
+   "range": [
+    null,
+    3
+   ],
+   "kind": "hard",
+   "guide": 1,
+   "why": "camera flies; ~1 real cut per video"
+  },
+  "dissolves_per_min": {
+   "range": [
+    6,
+    26
+   ],
+   "kind": "soft",
+   "guide": null,
+   "why": "refs 11-21 per minute"
+  },
+  "dissolve_len_f": {
+   "range": [
+    5,
+    12
+   ],
+   "kind": "hard",
+   "guide": 7,
+   "why": "median dissolve 7-9 frames, camera moving through it"
+  },
+  "longest_hold_s": {
+   "range": [
+    null,
+    2.6
+   ],
+   "kind": "hard",
+   "guide": null,
+   "why": "camera never parks; refs 0.47-2.5 s"
+  },
+  "saturation": {
+   "range": [
+    0.36,
+    0.56
+   ],
+   "kind": "soft",
+   "guide": 0.41,
+   "why": "warm bright toon; refs 0.40-0.51"
+  },
+  "value": {
+   "range": [
+    0.42,
+    0.7
+   ],
+   "kind": "soft",
+   "guide": 0.61,
+   "why": "refs 0.46-0.62"
+  },
+  "lufs_i": {
+   "range": [
+    -15.0,
+    -13.0
+   ],
+   "kind": "hard",
+   "guide": -14,
+   "why": "refs -14.0..-14.3"
+  },
+  "true_peak_dbtp": {
+   "range": [
+    null,
+    -1.0
+   ],
+   "kind": "hard",
+   "guide": -2,
+   "why": "refs -1.3..-2.2"
+  },
+  "caption_cap_px": {
+   "range": [
+    34,
+    52
+   ],
+   "kind": "soft",
+   "guide": 52.5,
+   "why": "refs measure 41-44 with this estimator (glyph run incl. stroke)"
+  },
+  "duration_s": {
+   "range": [
+    39,
+    66
+   ],
+   "kind": "soft",
+   "guide": 59,
+   "why": "Shorts 39-65 s, median 59"
+  }
+ },
+ "observed": {
+  "wps": {
+   "n": 4,
+   "min": 3.276,
+   "p50": 3.5355,
+   "max": 3.63,
+   "values": [
+    3.478,
+    3.63,
+    3.593,
+    3.276
+   ]
+  },
+  "wps_first3s": {
+   "n": 4,
+   "min": 2.827,
+   "p50": 3.7474999999999996,
+   "max": 4.422,
+   "values": [
+    4.082,
+    4.422,
+    3.413,
+    2.827
+   ]
+  },
+  "longest_pause_s": {
+   "n": 4,
+   "min": 0.12,
+   "p50": 0.195,
+   "max": 0.25,
+   "values": [
+    0.12,
+    0.25,
+    0.2,
+    0.19
+   ]
+  },
+  "pauses_over_0.33s": {
+   "n": 4,
+   "min": 0.0,
+   "p50": 0.0,
+   "max": 0.0,
+   "values": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "beats_per_s": {
+   "n": 4,
+   "min": 0.377,
+   "p50": 0.6315,
+   "max": 0.783,
+   "values": [
+    0.646,
+    0.617,
+    0.377,
+    0.783
+   ]
+  },
+  "median_beat_gap_s": {
+   "n": 4,
+   "min": 1.3,
+   "p50": 1.4415,
+   "max": 2.15,
+   "values": [
+    1.533,
+    1.3,
+    2.15,
+    1.35
+   ]
+  },
+  "max_beat_gap_s": {
+   "n": 4,
+   "min": 3.233,
+   "p50": 4.5,
+   "max": 10.133,
+   "values": [
+    3.233,
+    4.033,
+    10.133,
+    4.967
+   ]
+  },
+  "first_beat_s": {
+   "n": 4,
+   "min": 0.333,
+   "p50": 0.75,
+   "max": 2.0,
+   "values": [
+    0.667,
+    0.833,
+    2.0,
+    0.333
+   ]
+  },
+  "beats_in_first_3s": {
+   "n": 4,
+   "min": 2.0,
+   "p50": 2.0,
+   "max": 2.0,
+   "values": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  "hard_cuts": {
+   "n": 4,
+   "min": 0.0,
+   "p50": 0.0,
+   "max": 3.0,
+   "values": [
+    3,
+    0,
+    0,
+    0
+   ]
+  },
+  "dissolves_per_min": {
+   "n": 4,
+   "min": 11.34,
+   "p50": 17.66,
+   "max": 21.29,
+   "values": [
+    11.34,
+    21.29,
+    15.99,
+    19.33
+   ]
+  },
+  "dissolve_len_f": {
+   "n": 4,
+   "min": 7.5,
+   "p50": 8.25,
+   "max": 9.0,
+   "values": [
+    8.5,
+    8.0,
+    7.5,
+    9.0
+   ]
+  },
+  "longest_hold_s": {
+   "n": 4,
+   "min": 0.467,
+   "p50": 1.05,
+   "max": 2.5,
+   "values": [
+    1.2,
+    0.9,
+    2.5,
+    0.467
+   ]
+  },
+  "pct_frames_moving": {
+   "n": 4,
+   "min": 9.7,
+   "p50": 31.21,
+   "max": 44.5,
+   "values": [
+    42.57,
+    19.85,
+    9.7,
+    44.5
+   ]
+  },
+  "saturation": {
+   "n": 4,
+   "min": 0.402,
+   "p50": 0.4735,
+   "max": 0.508,
+   "values": [
+    0.469,
+    0.402,
+    0.508,
+    0.478
+   ]
+  },
+  "value": {
+   "n": 4,
+   "min": 0.46,
+   "p50": 0.591,
+   "max": 0.624,
+   "values": [
+    0.624,
+    0.561,
+    0.46,
+    0.621
+   ]
+  },
+  "lufs_i": {
+   "n": 4,
+   "min": -14.3,
+   "p50": -14.1,
+   "max": -14.0,
+   "values": [
+    -14.0,
+    -14.1,
+    -14.3,
+    -14.1
+   ]
+  },
+  "true_peak_dbtp": {
+   "n": 4,
+   "min": -2.2,
+   "p50": -2.05,
+   "max": -1.3,
+   "values": [
+    -1.9,
+    -2.2,
+    -1.3,
+    -2.2
+   ]
+  },
+  "caption_cap_px": {
+   "n": 4,
+   "min": 41.0,
+   "p50": 41.0,
+   "max": 43.5,
+   "values": [
+    41.0,
+    43.5,
+    41.0,
+    41.0
+   ]
+  },
+  "duration_s": {
+   "n": 4,
+   "min": 45.033,
+   "p50": 64.1665,
+   "max": 65.167,
+   "values": [
+    63.5,
+    64.833,
+    45.033,
+    65.167
+   ]
+  }
+ }
+}
