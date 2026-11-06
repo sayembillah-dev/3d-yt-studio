@@ -8,6 +8,12 @@ This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (
 
 Nothing on this page has been implemented yet. Section 5 is the to-do list.
 
+## TODO (user, 2026-11-06): build `beat_predict.mjs` after all
+It was skipped because on #01 the camera path explained only ~half the measured motion (correlation 0.5): beats also
+come from characters and caption pops. Next attempt should model those too: camera speed peaks + dissolves (cam_dump)
++ cast.ts pose keys / face swaps + caption chunk swaps (words.json), calibrated against the measured beats of #01, #02
+and 00_gate (`work/*_measure/motion.csv`), and validated against `render.sh pace` before it may gate anything.
+
 ## Status (2026-11-06): #9 built: look only at changed pictures
 `qa_frames.py` keeps each sheet cell's 90×160 signature (`work/qa/cells_sig.npz`) and the last round's flags, and writes
 `work/qa/to_review.json`: only sheets with a changed cell (worst 8×8 block diff > 6/255, or a changed word/beat
