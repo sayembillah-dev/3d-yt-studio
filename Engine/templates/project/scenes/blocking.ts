@@ -2,6 +2,8 @@ import type {Actor, Obstacle} from '@engine/blocking';
 import {placeOf} from '@engine/cast';
 // WHERE everything stands. Single source of truth: index.tsx reads character positions FROM here.
 // cam_qa G16 (actors never overlap) and G17 (camera never inside a person/prop) read ACTORS + OBSTACLES.
+// NAMING (cam_qa G18): actor id = <shotlist cast id><beat or n>, e.g. cast "watts" in beat b12 → 'watts12'. G18 fails a
+// beat whose cast has no such actor, or whose actor is never framed in the middle half of the beat.
 // Two-shots: keep characters ~1.5 apart (the 9:16 frame is only ~1.7 units wide at 4.6 units distance).
 
 export const ACTORS: Actor[] = [

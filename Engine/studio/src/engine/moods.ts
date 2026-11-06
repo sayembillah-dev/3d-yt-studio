@@ -55,9 +55,32 @@ export const MOODS: Record<string, Mood> = {
     rim: '#FFE2B0', rimIntensity: 0.8, charTint: '#FFE8D0', bloom: 0.6, vignette: 0.4,
     grade: {shadowTint: '#7A4A9A', hiTint: '#FFD08A', split: 0.32, vibrance: 0.45, lift: '#1A0C18', sat: 1.1, contrast: 1.08}, rays: 0,
   },
+  /** the reveal: bright lantern-lit BLUE (style-bible §12: reveal shifts to saturated blue, but value stays in range) — shaft cut-aways, underground, water-tank interiors */
+  revealBlue: {skyTop: '#2C4E9A', skyMid: '#5B84C8', skyHorizon: '#A9CBEE', fog: '#4A70B0', fogNear: 25, fogFar: 160,
+    sun: '#E4F0FF', sunIntensity: 2.0, sunDir: [-0.35, 0.55, 0.85], fill: '#7A96F0', fillIntensity: 1.0, ground: '#3A4A80',
+    rim: '#A8C8FF', rimIntensity: 1.1, charTint: '#F0F5FF', bloom: 0.7, vignette: 0.3,
+    grade: {shadowTint: '#5A5AD8', hiTint: '#FFE9C8', split: 0.26, vibrance: 0.35, lift: '#101838', sat: 1.0, contrast: 1.06}, rays: 0, shadows: true},
   goldenMorning: {skyTop: '#F2B45A', skyMid: '#F7D08A', skyHorizon: '#FFF0C8', fog: '#F2D2A0', fogNear: 30, fogFar: 300,
     sun: '#FFE0A0', sunIntensity: 2.4, sunDir: [-0.9, 0.4, 0.2], fill: '#E8B080', fillIntensity: 0.9, ground: '#C49A5A',
     rim: '#FFF0C0', rimIntensity: 1.0, charTint: '#FFF0DA', sunDisc: {dir: [-1, 0.3, -0.6], color: '#FFF4C8', size: 22}, bloom: 0.8, vignette: 0.3,
     grade: {shadowTint: '#8A7CE0', hiTint: '#FFE0A0', split: 0.32, vibrance: 0.5, lift: '#1A1028', sat: 1.12, contrast: 1.07}, rays: 0.7, sunburst: 0.5,
   },
 };
+
+// ---------------------------------------------------------------- mood blending (a continuous flight that passes through different light)
+const _hex = (c: string) => { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const _mixHex = (a: string, b: string, t: number) => { const x = _hex(a), y = _hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+/** Blend two moods (colours + numbers + grade); discrete fields (sunDisc) follow whichever is nearer. t 0..1. */
+export function lerpMood(a: Mood, b: Mood, t: number): Mood {
+  if (t <= 0) return a; if (t >= 1) return b;
+  const out: any = {};
+  for (const k of Object.keys(a) as (keyof Mood)[]) {
+    const va: any = a[k], vb: any = b[k] ?? va;
+    if (typeof va === 'string' && va[0] === '#' && typeof vb === 'string') out[k] = _mixHex(va, vb, t);
+    else if (typeof va === 'number' && typeof vb === 'number') out[k] = va + (vb - va) * t;
+    else if (Array.isArray(va) && Array.isArray(vb) && typeof va[0] === 'number') out[k] = va.map((x: number, i: number) => x + (vb[i] - x) * t);
+    else if (k === 'grade') { const g: any = {}; for (const gk of Object.keys({...va, ...vb})) { const ga = (va ?? {})[gk], gb = (vb ?? {})[gk] ?? ga; g[gk] = typeof ga === 'string' ? _mixHex(ga, gb, t) : ga + (gb - ga) * t; } out[k] = g; }
+    else out[k] = t < 0.5 ? va : vb;
+  }
+  return out as Mood;
+}

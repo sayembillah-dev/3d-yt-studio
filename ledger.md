@@ -9,6 +9,7 @@ Tokens come from Claude Code's session logs inside each video's phase windows. P
 | # | Project | Title | Type | Phase | Started (UTC) | Finished (UTC) | Wall time | Claude active | Sessions | Models (API calls) | API calls | Tool calls | Input tok | Cache-write tok | Cache-read tok | Output tok | Total tok | Web searches | Renders (n / min) | Fix loops | Video length | Est. API cost | Paid extras | Total cost | Cost / video-min |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | 01_dutch-water-line | Why the Dutch Drowned Their Own Farms | short | done | 2026-11-06 00:01 | 2026-11-06 04:01 | 3h59m | 1h56m | 3 | opus-5-5 (233) | 233 | 416 | 0.6k | 600.2k | 87.19M | 340.8k | 88.13M | 0 | 18 / 94.5 | 0 | 58.2 s | $29.06 | $0.00 | $29.06 | $29.96 |
+| 2 | 02_shot-tower | The Plumber Who Rained Lead | short | audio | 2026-11-06 11:34 | in progress | 1h34m | 1h17m | 1 | sonnet-5-5 (195), opus-5-5 (4) | 199 | 204 | 649.5k | 845.9k | 28.30M | 280.4k | 30.08M | 0 | 16 / 11.2 | 0 | — | $13.56 | $0.00 | $13.56 | — |
 
 **Finished videos: 1** · average total cost $29.06 · average Claude-active 1h56m · average wall time 3h59m · average cost per video-minute $29.96
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cam_qa.py — 15 numeric gates for the ONE continuous camera. Runs on the camera SPEC (no render needed).
+cam_qa.py — numeric gates (G1-G19) for the ONE continuous camera. Runs on the camera SPEC (no render needed).
 
 Usage:
   python3 cam_qa.py <project_dir> [--out report.json]
@@ -24,7 +24,13 @@ It calls cam_dump.mjs (evaluates scenes/camera.ts at every frame) and checks:
   G16 actors_apart       no two characters closer than r1+r2 at any frame (guide v1: "two guys walk right through each other")
                          + no character inside an obstacle (walk AROUND props / exit through doors)
   G17 camera_clearance   camera never within 0.35 of a character or inside an obstacle (our v1: camera flew into a barrel)
-  (G16/G17 need scenes/blocking.ts exporting ACTORS and OBSTACLES — see references/project-template)
+  G18 cast_in_frame      every character shotlist.json names for a beat is on screen (body inside the frame, big enough
+                         to read) at some point in the middle half of that beat  (#02: "complained" beat with no neighbour)
+  G19 head_in_frame      no character shown at medium/close size (>= 30 % of frame height) has the top of the head
+                         above the frame edge for >= 6 f  (#02: Watts's head cut at f765/f1125/f1140)
+  (G16-G19 need scenes/blocking.ts exporting ACTORS and OBSTACLES — see references/project-template; G18 also needs
+   shotlist.json. Actor ids match shotlist cast ids by prefix: cast "watts" = actors watts1, watts12, …
+   Projection only: a character hidden BEHIND a wall still counts as on screen.)
 Exit 1 if any gate fails. Each failure prints the frame(s) and the fix.
 """
 import json, math, os, subprocess, sys
@@ -48,6 +54,8 @@ FIX = {
     'G15': 'Too fast: spread the move over more frames or declare a whip (ease:"whip") on purpose.',
     'G16': 'Re-route the walk path AROUND the other actor/prop (add a path key that detours), or stagger timing so they are never in the same spot.',
     'G17': 'Move the camera waypoint away from the actor/prop, or move the prop off the flight line (check frames listed).',
+    'G18': 'The beat names this character but the camera never frames them: aim the waypoint look at them / pull back, or move the actor into the shot (blocking.ts). If the beat is really object-only, remove the character from the cast of that beat in shotlist.json (the plan must match the picture). Actors MUST be named <castId><n> (cast "neighbour" -> actor neighbour11); an unmatched cast id fails.',
+    'G19': 'Head cut by the top edge: raise the look target to head height (feet + 0.85 x height), pull the camera back, or widen fov at the listed frames.',
 }
 
 
@@ -191,6 +199,66 @@ def main():
         gate('G17', 'camera_clearance', not cl, list(firstc.values())[:10] or 'ok')
     else:
         print('NOTE: no scenes/blocking.ts → G16/G17 skipped (create it: they catch walk-throughs and camera-in-prop)')
+    # G18/G19 — project characters through the camera (three.js: vertical fov, look-at, up = +y; roll ignored, <= 0.2)
+    if actors:
+        try:
+            ptype = json.load(open(os.path.join(proj, 'project.json'))).get('type', 'short')
+        except Exception:
+            ptype = 'short'
+        aspect = 9 / 16 if ptype == 'short' else 16 / 9
+        def cross(a_, b_): return [a_[1] * b_[2] - a_[2] * b_[1], a_[2] * b_[0] - a_[0] * b_[2], a_[0] * b_[1] - a_[1] * b_[0]]
+        def dot(a_, b_): return sum(x * y for x, y in zip(a_, b_))
+        def project(f, pt):
+            c, l, fov = fr[f][0:3], fr[f][3:6], fr[f][6]
+            fw = unit(sub(l, c)); rt = unit(cross(fw, [0, 1, 0])); up = cross(rt, fw)
+            dv = sub(pt, c); z = dot(dv, fw)
+            if z <= 0.2: return None
+            tv = math.tan(math.radians(fov) / 2)
+            return dot(dv, rt) / (z * tv * aspect), dot(dv, up) / (z * tv)
+        def view(f, a_):   # (body on screen, projected height as a fraction of frame height, head-top screen y)
+            p_ = a_['pos'][f]; h = a_.get('height', 1.7)
+            feet, head, mid = project(f, p_), project(f, [p_[0], p_[1] + h, p_[2]]), project(f, [p_[0], p_[1] + 0.55 * h, p_[2]])
+            if not (feet and head and mid): return False, 0.0, None
+            size = (head[1] - feet[1]) / 2
+            return abs(mid[0]) <= 0.95 and abs(mid[1]) <= 0.95, size, head[1]
+        live_at = lambda f: [a_ for a_ in actors if a_['enter'] <= f <= a_['exit'] and 0 <= f < len(a_['pos'])]
+        # G18
+        shots = []
+        try:
+            sl = json.load(open(os.path.join(proj, 'shotlist.json')))
+            shots = (sl.get('shots') or sl.get('beats') or []) if isinstance(sl, dict) else sl
+        except Exception:
+            pass
+        missing, unmatched = [], set()
+        for sh in shots:
+            a0, a1 = int(sh.get('from', 0)), int(sh.get('to', 0))
+            if a0 > END: continue   # gate folders may carry the full project shotlist
+            q0, q1 = a0 + (a1 - a0) // 4, a1 - (a1 - a0) // 4
+            for c_ in sh.get('cast') or []:
+                cid = c_.get('id') if isinstance(c_, dict) else c_
+                if not cid: continue
+                cands = [a_ for a_ in actors if a_['id'] == cid or (a_['id'].startswith(cid) and a_['id'][len(cid):][:1].isdigit())]
+                if not cands:
+                    unmatched.add(cid); missing.append((sh.get('id'), cid, 'no actor named ' + cid + '<n> in blocking.ts')); continue
+                seen = any(view(f, a_)[0] and view(f, a_)[1] >= 0.06 for f in range(q0, q1 + 1) for a_ in cands if a_ in live_at(f))
+                if not seen:
+                    missing.append((sh.get('id'), cid, f'f{q0}-{q1}'))
+        if shots:
+            note = f' + cast ids with no actor: {sorted(unmatched)}' if unmatched else ''
+            gate('G18', 'cast_in_frame', not missing, f'{len(missing)} miss(es): {missing[:10]}{note}' if missing else f'{len(shots)} beats ok')
+        # G19
+        runs, cur = [], {}
+        for f in range(0, END + 1):
+            now = set()
+            for a_ in live_at(f):
+                on, size, hy = view(f, a_)
+                if on and 0.30 <= size <= 1.5 and hy is not None and hy > 1.0:
+                    now.add(a_['id']); cur.setdefault(a_['id'], f)
+            for k_ in [k_ for k_ in cur if k_ not in now]:
+                if f - cur[k_] >= 6: runs.append((k_, f'f{cur[k_]}-{f - 1}'))
+                del cur[k_]
+        runs += [(k_, f'f{v_}-{END}') for k_, v_ in cur.items() if END + 1 - v_ >= 6]
+        gate('G19', 'head_in_frame', not runs, runs[:10] or 'ok')
     npass = sum(r_['pass'] for r_ in res)
     for r_ in res:
         print(f"{r_['gate']:4s} {r_['name']:18s} {'PASS' if r_['pass'] else 'FAIL'}  {r_['detail']}")

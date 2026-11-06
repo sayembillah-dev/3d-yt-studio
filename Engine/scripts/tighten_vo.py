@@ -132,7 +132,10 @@ def main():
     res = []
     if nwords:
         wps = nwords / dur1
-        res.append(('V1', 'wps', 3.2 <= wps <= 4.1, f'{nwords} words / {dur1:.2f} s = {wps:.2f} w/s (3.2–4.1, guide 3.66; before {nwords / dur0:.2f})'))
+        res.append(('V1', 'wps', 3.2 <= wps <= 4.1, f'{nwords} words / {dur1:.3f} s = {wps:.3f} w/s (3.2–4.1, guide 3.66; before {nwords / dur0:.3f}) '
+                    f'— ESTIMATE from script words; the gate is transcribe.py --gate (whisper, same as the final compare)'))
+        if 3.2 <= wps < 3.264 or 4.018 < wps <= 4.1:
+            print(f'WARN  V1 wps {wps:.3f} is within 2 % of the gate edge: the final mix can drift 1.5 % and fail. Aim 3.27–4.0.')
     else:
         res.append(('V1', 'wps', None, 'N/A (pass --script or --words; transcribe.py reports wps next)'))
     res.append(('V2', 'pause', longest <= 0.33, f'longest remaining pause {longest:.2f} s (≤ 0.33; refs 0.12–0.25)'))
@@ -142,7 +145,7 @@ def main():
     if fails:
         print('\nFIX PLAYBOOK:')
         for cid, name, _, _ in fails:
-            print('  ' + {'V1': 'V1 wps: too slow → faster take, or --atempo 1.05 (max 1.10); too fast → add words or --atempo 0.97. Never pad silence.',
+            print('  ' + {'V1': 'V1 wps: too slow → --keep 0.10, denser wording, or --atempo ≤ 1.05 (user found 1.10 rushed; adding words at the same pace does not raise wps); too fast → --keep 0.16 or --atempo 0.97. Never pad silence.',
                           'V2': 'V2 pause: lower --gap to 0.25, or the "pause" is a held breath/noise above the threshold → --min-silence-db -35.'}[cid])
     print(f'\nSuggested project.json duration_s = {dur1 + 0.5:.1f}  (VO length + 0.5 s)')
     print(f'TIGHTEN_VO: {"FAIL" if fails else "PASS"}')

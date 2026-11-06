@@ -27,7 +27,7 @@ How to review (do it in this order, do not skip):
 - [ ] A6 (m) Talking character's mouth flaps only while that character's line is spoken.
 
 ## Lens 3 — Camera & post (score /10)
-- [ ] K1 (M) cam_qa.py 17/17 PASS (paste the line). The camera never parks; no braking at waypoints; no spin.
+- [ ] K1 (M) cam_qa.py all gates PASS (paste the `CAM_QA: N/N` line; 19 with shotlist + blocking). The camera never parks; no braking at waypoints; no spin.
 - [ ] K2 (M) A new framing at least every ~1.7 s on the sheets (median beat gap 1.2–2.2 s in compare.py).
 - [ ] K3 (M) The subject of each beat is in focus (DOF focus follows the subject); foreground blur only on foreground elements.
 - [ ] K4 (M) No camera inside/through geometry (no flat-colour fill frames; qa_frames 'occluded' = 0).

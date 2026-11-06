@@ -8,6 +8,36 @@ This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (
 
 Nothing on this page has been implemented yet. Section 5 is the to-do list.
 
+## Status (2026-11-06, later): Step 5 built + two new fixes from video #02's data; Step 6 phase cards not started
+
+**Video #02 measured (stopped at audio, so not a full comparison):** $14.78 vs #01's $29.06, active time 1h22m vs
+1h56m, renders 11.2 min vs 94.5 min (full renders 40–96 s each). Most calls ran on Sonnet (195 Sonnet, 4 Opus). The
+handoff-note design held up on a real video.
+
+**5. Geometry preflight. Built as cam_qa G18/G19 (projection) + `preflight.mjs` (code):**
+- `cam_qa` **G18 cast_in_frame**: every character shotlist.json names for a beat must be on screen in the middle half
+  of that beat. It projects feet and head through the camera, with heights from cast.ts (cam_dump now exports them).
+  Spot-checked against stills: #02 b05/b12/b13/b14 (f180/f522/f570/f617) and #01 b17 (f895) really don't show the named
+  character. QA had passed all of them. A second check against #01's delivered `final.mp4` (f100/f160/f560/f1700) also
+  matched, with no false positives. A cast id with no actor named `<castId><n>` now fails too (#02's "neighbour" was
+  actor `nbr11a`). On the old files: #01 has 21 misses, #02 has 19. Naming rule added to SKILL.md Phase 6/8 and the template
+  blocking.ts.
+- `cam_qa` **G19 head_in_frame**: a medium/close character's head is above the frame top for ≥ 6 f. On #02 it finds
+  f755–766 and f1124–1130, two of the three head cuts QA found by eye (it misses f1140).
+- `Engine/scripts/preflight.mjs` (~2 s, run by `render.sh` before every bundle): **PF1** TypeScript check of the engine
+  plus project scenes (TypeScript was installed all along; exFAT just has no `.bin` links), and **PF2** React rules of
+  hooks. #02 crashed mid-render on a hook after an early return; PF2 catches that and PF1 catches type errors (both
+  tested with injected bugs). `PREFLIGHT_SKIP=1` bypasses it.
+- Not covered: occlusion (a character behind a wall counts as visible), floating props, feet vs ground height.
+
+**New: wps gate fixed at Phase 5.** #02's VO was **3.198** w/s at the voice step. `transcribe.py` printed it rounded
+to "3.2", so it was read as a pass, and it then failed the final compare at 3.15 (the mix re-transcribed over music
+drifts: +0.4 % on #01, −1.5 % on #02). `transcribe.py` now prints V1/V2 with 3 decimals and a 2 % WARN band
+(3.264–4.018), and `--gate` sets the exit code (the default exit is unchanged, because measure_short relies on it). The fix text no
+longer says "add words", which doesn't raise wps at the same pace, and caps atempo at 1.05.
+
+00_gate after all of this: preflight PASS, cam_qa 18/18 (no shotlist, so no G18), qa_frames 0 P0/P1, compare PASS.
+
 ## Status (2026-11-06): Steps 1–4 built and tested; Steps 5–6 not started
 
 **4. Tier 2 (render time). Measured 2026-11-06 on #01's real scene (58 s, 1746 frames), idle M1, incl. bundling:**

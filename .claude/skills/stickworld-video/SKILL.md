@@ -157,15 +157,20 @@ before Phase 5.
    Never clone a real person's voice. Save it as `$P/public/vo_raw.mp3`.
 2. `python3 $S/tighten_vo.py $P/public/vo_raw.mp3 $P/public/vo.mp3 --script $P/script.md` — removes every gap > 0.30 s
    down to 0.12 s (cuts in silence only), reports wps before/after.
-3. `python3 $S/transcribe.py $P/public/vo.mp3 $P/public/words.json`
-**Gate:** wps 3.2–4.1, longest pause ≤ 0.33 s (both printed by tighten_vo/transcribe). If wps < 3.2 ask for a faster
-take or allow `--atempo 1.05` in tighten_vo (max 1.10). Set `duration_s` in project.json = VO length + 0.5 s.
+3. `python3 $S/transcribe.py $P/public/vo.mp3 $P/public/words.json --gate`
+**Gate:** `TRANSCRIBE GATE: PASS` (exit 0). tighten_vo's wps is only an estimate from script words; transcribe's V1 is
+measured exactly like the final compare (whisper words / word span, 3 decimals — never read a rounded 3.2 as a pass).
+**WARN counts as not passed**: within 2 % of 3.2/4.1 the final mix (re-transcribed over music) can drift out —
+#02 measured 3.198 here and 3.15 on the final, a hard fail at the last phase. Fix now, in this order: tighten_vo
+`--keep 0.10`, denser wording (adding words at the same pace does not raise wps), `--atempo` ≤ 1.05 (the user found
+1.10 rushed). Longest pause ≤ 0.33 s. Set `duration_s` in project.json = VO length + 0.5 s.
 
 ## Phase 6 — `shotplan`
 1. Build `$P/shotlist.json` (template in `$T/shotlist.json`, worked example `$R/examples/shotlist_example.json`):
    one **beat** every ~1.7 s, aligned to words.json. For each beat: `id, from, to` (frames, 30 fps), `words`
    (the VO words in it), `sync` (the noun/verb that must be on screen at its word ±3 f), `set`, `visual`
-   (what we see), `camera` (move kind: push/pull/whip/orbit/crane/pan/tilt/fly-through), `cast` (who, face, action),
+   (what we see), `camera` (move kind: push/pull/whip/orbit/crane/pan/tilt/fly-through), `cast` (who, face, action —
+   ONLY characters who will be ON SCREEN in that beat: cam_qa G18 checks it; an object-only beat has `cast: []`),
    `sfx` (list), `transition_in` ("flight"|"dissolve"|"cut").
 2. Lay out the **sets** along one flight path (style-bible §4). 7–10 sets per 60 s. A set change is a flight through
    a portal (door, window, porthole, smoke) or an 8-frame dissolve mid-flight; ≤ 1 hard cut per Short.
@@ -183,7 +188,7 @@ before building the whole video**, and push it until it scores. Copy `Engine/exa
    (with the gate skip list) in one call; one PASS/FAIL table, fix text only for what failed, full logs in
    `work/logs/`.
 3. Score the 5 lenses in `$R/qa-rubric.md` using qa_frames' `work/qa/sheet_*.jpg` and `flag_*.jpg`.
-**Gate:** every lens ≥ 7/10, compare.py 0 hard fails (`--skip voice,audio,duration,dissolves_per_min,median_beat_gap_s`), cam_qa 17/17.
+**Gate:** every lens ≥ 7/10, compare.py 0 hard fails (`--skip voice,audio,duration,dissolves_per_min,median_beat_gap_s`), cam_qa all gates PASS.
 (median_beat_gap_s is skipped only here: on a 3.6 s clip it is one gap; cam_qa G4–G7 + first_beat_s +
 beats_in_first_3s still gate the pacing. Full videos never skip it.)
 Record the scores in project.json `gate_scores`. Iterate fix → re-render → re-score (keep a log in `$P/work/gate_log.md`;
@@ -211,11 +216,13 @@ Rules (each is a QA check later):
 - Captions: `<Captions words={words} />` (1–2 word chunks, cap height ≈ 42 px on the estimator).
 Commands:
 ```
+node $S/preflight.mjs $P           # ~2 s: PF1 types + PF2 rules of hooks (render.sh runs it before every render)
 node $S/cam_dump.mjs $P            # camera + actors → work/camera_dump.json
-python3 $S/cam_qa.py $P            # 17 gates; FIX text printed for each failure
+# actor ids in blocking.ts = <shotlist cast id><n> (cast "watts" → watts12): G18 matches by that prefix, unmatched = FAIL
+python3 $S/cam_qa.py $P            # G1-G19 (G18 cast on screen per beat, G19 heads not cut); FIX text per failure
 bash $S/render.sh $P stills <Comp> 15,60,120,…   # one still per beat mid-frame → work/sheet_stills.jpg; LOOK at it
 ```
-**Gate:** cam_qa 17/17 PASS; stills sheet viewed (Read the jpg) and every beat's `visual` from shotlist.json is visible.
+**Gate:** cam_qa all gates PASS (`CAM_QA: N/N`); stills sheet viewed (Read the jpg) and every beat's `visual` from shotlist.json is visible.
 
 ## Phase 9 — `qa` (render → measure → review → fix loop)
 Render speed (measured 2026-11-06, idle M1, #01's 58 s / 1746 f scene, incl. bundling): full size `video` 97–106 s ·
@@ -277,9 +284,10 @@ Set phase `done` (`new_project.py --set-phase $P done` → closes the ledger), t
 | new_project.py | 1–12 | built (`<slug> --title`, `--set-phase`, `--set key=value`, `--status`) |
 | script_lint.py | 4 | built (L1–L12; tag the mechanism line [REVEAL]) |
 | tighten_vo.py | 5 | built (V1–V2; `--script` gives wps, `--atempo` ≤ 1.10) |
-| transcribe.py | 5 | built |
+| transcribe.py | 5 | built (V1 wps exact + 2 % WARN band, V2 pause; `--gate` sets the exit code) |
 | plan_lint.py | 6 | built (PL1–PL10) |
-| cam_dump.mjs / cam_qa.py | 8 | built (17 gates) |
+| cam_dump.mjs / cam_qa.py | 8 | built (G1–G19: G18 cast_in_frame, G19 head_in_frame project characters through the camera) |
+| preflight.mjs | 8–9 | built (PF1 tsc types, PF2 rules of hooks; engine + project scenes; render.sh runs it first, `PREFLIGHT_SKIP=1` to bypass) |
 | render.sh / stills.mjs / splice.py | 7–9 | built (`stills\|video\|preview\|pace\|range\|splice`; stills.mjs: one browser+server per still batch; splice.py: re-rendered ranges → one re-encode) |
 | qa_frames.py | 9 | built (calibrated on 4 references: 0 false P1) |
 | measure_short.py / compare.py | 9–10 | built |

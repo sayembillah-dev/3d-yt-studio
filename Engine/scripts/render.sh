@@ -30,6 +30,12 @@ export SW_CACHE="${SW_CACHE:-$CACHE_ROOT/webpack}"
 mkdir -p "$(dirname "$BUILD")" "$SW_CACHE"; rm -rf "$BUILD"
 cd "$STUDIO"
 mkdir -p "$PROJ/work"
+# preflight (~2 s): types + React rules of hooks for engine + project scenes; catches mid-render crashes (#02: React #310
+# at f571) before bundling. Quiet on PASS. PREFLIGHT_SKIP=1 skips it (emergencies only).
+if [ -z "${PREFLIGHT_SKIP:-}" ]; then
+  PF_OUT="$(node "$HERE/preflight.mjs" "$PROJ" 2>&1)" || { echo "$PF_OUT"; echo "RENDER NOT STARTED: preflight failed (fix above)"; exit 1; }
+  echo "preflight PASS"
+fi
 # cost ledger: one line per render (incl. bundle time) → work/render_log.jsonl, read by ledger.py
 T0=$(date +%s); AT=$(date -u +%Y-%m-%dT%H:%M:%SZ); RARG="${4:-}"
 LOOK="full"; [[ "${SW_PROPS:-}" == *'"measure":true'* ]] && LOOK="measure"

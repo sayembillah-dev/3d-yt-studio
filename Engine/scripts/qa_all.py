@@ -5,7 +5,7 @@ qa_all.py — one quiet QA round: runs the right numeric checks for the phase, p
 Replaces 4-6 separate script calls + their raw output per QA round.
 
 usage: python3 qa_all.py <project_dir> <gate|qa|pace|final> [Comp]
-  gate   Phase 7: cam_qa (17 gates) + compare --skip voice,audio,duration,dissolves_per_min,median_beat_gap_s
+  gate   Phase 7: cam_qa (G1-G19) + compare --skip voice,audio,duration,dissolves_per_min,median_beat_gap_s
          on work/<Comp>.mp4 (needs Comp; render it first with render.sh)
   qa     Phase 9: qa_frames + compare --skip audio on work/<Comp>.mp4 (needs Comp; render it first)
   pace   Phase 9 fix loops for pacing-only fixes: cam_qa + compare on work/<Comp>_pace.mp4 (render.sh pace) —

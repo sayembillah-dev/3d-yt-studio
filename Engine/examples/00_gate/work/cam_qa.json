@@ -1,6 +1,6 @@
 {
- "pass": 17,
- "total": 17,
+ "pass": 18,
+ "total": 18,
  "gates": [
   {
    "gate": "G1",
@@ -120,6 +120,13 @@
   {
    "gate": "G17",
    "name": "camera_clearance",
+   "pass": true,
+   "detail": "ok",
+   "fix": null
+  },
+  {
+   "gate": "G19",
+   "name": "head_in_frame",
    "pass": true,
    "detail": "ok",
    "fix": null

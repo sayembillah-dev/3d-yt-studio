@@ -21,8 +21,8 @@ Re-render only the affected range: `bash "$S/render.sh" "$P" range <Comp> <from>
 | `npx` / `.bin` not found | Never use npx. Call `node Engine/studio/node_modules/<pkg>/...` (render.sh already does). |
 
 ---
-## 1. Camera gates — `cam_qa.py` (G1–G17)
-Verify for all of them: `node "$S/cam_dump.mjs" "$P" && python3 "$S/cam_qa.py" "$P"` → must print `17/17 PASS`.
+## 1. Camera gates — `cam_qa.py` (G1–G19)
+Verify for all of them: `node "$S/cam_dump.mjs" "$P" && python3 "$S/cam_qa.py" "$P"` → must print `CAM_QA: N/N gates pass` (19 with a shotlist + blocking; G18 needs shotlist.json, G16–G19 need blocking.ts).
 All camera data lives in `$P/scenes/camera.ts` (`camera.keys`, `camera.drift`, `camera.shakes`, `TRANSITIONS`).
 
 ### G1 never_parks — a run > 12 f with apparent motion < 0.04 °/f
@@ -86,13 +86,26 @@ Spread the move over more frames, or declare it a whip (`ease: 'whip'` on the ar
 ### G17 camera_clearance — camera within 0.35 of a character or inside an obstacle
 Move the camera key away from the actor/prop, or move the prop off the flight line. If the camera must pass a prop as a foreground wipe, keep it ≥ 0.35 outside the prop's radius and < 6 f (see `occluded`).
 
+### G18 cast_in_frame — a character the shotlist names for a beat is never on screen in that beat
+Checked by projecting each actor (feet → head, cast.ts height) through the camera in the middle half of the beat; the body
+centre must be inside the frame at ≥ 6 % of frame height. Fix the CAMERA (look target toward the actor, pull back, wider
+fov) or the BLOCKING (move the actor into the shot). If the beat is really object-only, delete that character from the
+beat's `cast` in shotlist.json — the plan must describe the picture. Name actors `<castId><n>` (watts12) so they match.
+Projection only: a character behind a wall still counts as visible — the stills sheet catches that.
+
+### G19 head_in_frame — head cut by the top edge for ≥ 6 f at medium/close size (≥ 30 % of frame height)
+Raise the look target to head height (feet + 0.85 × height), pull the camera back, or widen fov at the listed frames.
+
 ---
 ## 2. Reference-number gates — `compare.py` (metric names exactly as printed)
 Verify: `python3 "$S/compare.py" "$P/work/<Comp>.mp4" --skip audio` (picture), or on `output/final.mp4` (everything).
 Gate-shot only: add `--skip voice,audio,duration,dissolves_per_min,median_beat_gap_s`.
 
 ### wps — words per second outside 3.2–4.1
-Too slow: ask for a faster take, or `tighten_vo.py --atempo 1.05` (max 1.10). Too fast (> 4.1): add 3–6 words to the script or use `--atempo 0.97`. Never pad with silence.
+Catch it in Phase 5: `transcribe.py … --gate` (exact, same measure as here; WARN within 2 % of either edge, because the
+final mix re-transcribed over music drifts: −1.5 % on #02). Too slow: `tighten_vo.py --keep 0.10`, denser wording (adding
+words at the same pace does NOT raise wps), then `--atempo` ≤ 1.05 (the user found 1.10 rushed). Too fast (> 4.1):
+`--keep 0.16` or `--atempo 0.97`. Never pad with silence.
 
 ### longest_pause_s — a pause > 0.33 s
 `python3 "$S/tighten_vo.py" "$P/public/vo_raw.mp3" "$P/public/vo.mp3"` (gaps > 0.30 → 0.12 s), then re-run `transcribe.py`.

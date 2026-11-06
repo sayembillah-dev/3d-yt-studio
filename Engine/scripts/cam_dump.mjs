@@ -16,11 +16,14 @@ if (!fs.existsSync(entry)) { console.error(`MISSING ${entry} — every project k
 const tmp = path.join(os.tmpdir(), `camdump_${process.pid}.mjs`);
 const blk = path.join(proj, 'scenes', 'blocking.ts');
 const hasBlk = fs.existsSync(blk);
+const cst = path.join(proj, 'scenes', 'cast.ts');
+const hasCast = fs.existsSync(cst);   // character heights for cam_qa G18/G19 (cast.ts is pure data)
 const shim = `import * as C from ${JSON.stringify(entry)}; import {projectCameraAt, projectKeys, projectSwaps} from ${JSON.stringify(path.join(studio, 'src/engine/camera.ts'))};
 import {posAt} from ${JSON.stringify(path.join(studio, 'src/engine/blocking.ts'))};
 ${hasBlk ? `import * as B from ${JSON.stringify(blk)};` : 'const B = {};'}
+${hasCast ? `import * as K from ${JSON.stringify(cst)};` : 'const K = {};'}
 export function dump(){ const END=C.END; const fr=[]; for(let f=-1; f<=END; f++){ const s=projectCameraAt(C,f); fr.push([f,...s.pos,...s.look,s.fov,s.roll]); }
- const actors=(B.ACTORS||[]).map(a=>({id:a.id, radius:a.radius??0.28, enter:a.enter??-1e9, exit:a.exit??1e9, pos:Array.from({length:END+1},(_,f)=>posAt(a,f))}));
+ const CAST=K.CAST||{}; const actors=(B.ACTORS||[]).map(a=>({id:a.id, radius:a.radius??0.28, height:(CAST[a.id]?.height??1.7)*(CAST[a.id]?.look?.scale??1), enter:a.enter??-1e9, exit:a.exit??1e9, pos:Array.from({length:END+1},(_,f)=>posAt(a,f))}));
  return {END, keys:projectKeys(C), swaps:projectSwaps(C), transitions:C.TRANSITIONS||[], frames:fr, actors, obstacles:B.OBSTACLES||[]}; }`;
 await esbuild.build({stdin: {contents: shim, resolveDir: proj, loader: 'ts'}, bundle: true, format: 'esm', platform: 'node', outfile: tmp,
   alias: {'@engine': path.join(studio, 'src/engine')}, logLevel: 'error', loader: {'.json': 'json'}});

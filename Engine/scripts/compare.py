@@ -24,7 +24,7 @@ AUDIO = {'lufs_i', 'true_peak_dbtp'}
 
 # what to do when a gate fails — the fix playbook (also in references/fix-playbook.md)
 FIX = {
-    'wps': 'VO too slow/fast: re-generate VO (speed tag / atempo 1.03-1.10 via ffmpeg) or trim script words. Never pad with silence.',
+    'wps': 'VO too slow/fast: should have been caught by transcribe.py --gate in Phase 5 (WARN band 3.264-4.018). Slow: tighten_vo --keep 0.10, denser wording, or atempo <= 1.05 (user found 1.10 rushed); fast: --keep 0.16 / atempo 0.97. Never pad with silence.',
     'longest_pause_s': 'Run scripts/tighten_vo.py to shorten gaps > 0.30 s to 0.12 s, then re-transcribe.',
     'median_beat_gap_s': 'Shot plan: add/remove camera waypoints so a new framing lands every ~1.7 s (scripts/plan_lint.py).',
     'max_beat_gap_s': 'A framing is held too long: insert a waypoint (push-in / orbit / pan) in the long gap.',

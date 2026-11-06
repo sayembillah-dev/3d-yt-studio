@@ -4,9 +4,9 @@
  "frames": 108,
  "duration_s": 3.6,
  "motion": {
-  "diff_p50": 9.111,
-  "diff_p90": 12.498,
-  "diff_max": 22.443,
+  "diff_p50": 9.115,
+  "diff_p90": 12.508,
+  "diff_max": 22.471,
   "pct_frames_moving": 40.74,
   "pct_frames_held": 0.0,
   "longest_hold_s": 0.0
