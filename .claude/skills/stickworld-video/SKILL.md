@@ -250,7 +250,11 @@ fix loop to `preview` (≈ 2× faster on a slow machine) and render full size ag
    table, fix text only for what failed, full logs in `work/logs/`. qa_frames also writes `work/qa/`: auto
    findings (P0/P1 fail), flag strips, review sheets (one cell per 0.5 s, labelled with the spoken word + the
    shot beat), and a fresh `review.md` every run.
-3. **Review**: Read every `work/qa/flag_*.jpg` and every `work/qa/sheet_*.jpg`. Fill `work/qa/review.md` (the 5-lens
+3. **Review**: Read the images listed in `work/qa/to_review.json` (qa_all prints `READ n/N sheets + m/M flags`).
+   Round 1 lists all of them; fix-loop rounds list only sheets whose pictures/labels changed since the last round and
+   only new flag strips (a camera.ts change re-lists everything; a splice lists its range). Unlisted images are
+   pixel-identical to ones already reviewed: keep their verdicts in review.md. Before declaring the gate passed,
+   run `qa_frames.py <P> <video> --all` only if review.md has an unchecked lens. Fill `work/qa/review.md` (the 5-lens
    rubric: each check yes/no with frame numbers). Score each lens /10 with the rubric's scoring rule.
 4. **Fix loop**: for every failing gate/check look up `$R/fix-playbook.md` (keyed by the exact gate/check name), make
    the change, then re-check with the cheapest render that can show it:

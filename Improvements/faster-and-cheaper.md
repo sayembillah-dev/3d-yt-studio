@@ -8,6 +8,13 @@ This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (
 
 Nothing on this page has been implemented yet. Section 5 is the to-do list.
 
+## Status (2026-11-06): #9 built: look only at changed pictures
+`qa_frames.py` keeps each sheet cell's 90×160 signature (`work/qa/cells_sig.npz`) and the last round's flags, and writes
+`work/qa/to_review.json`: only sheets with a changed cell (worst 8×8 block diff > 6/255, or a changed word/beat
+label) and only new flag strips. Tested on #01's scene: a second, independent render gives 0/5 sheets (block diffs
+< 2); a red box on f600–700 lists only sheet_01 (f600–690); `--all` gives 5/5. QA fix rounds re-read only what moved;
+round 1 still reads everything (G18 showed the eye check matters).
+
 ## Status (2026-11-06, Tier 4): #10, #11, #13 built; #12 measured, default now 3
 
 - **#12 Render concurrency, measured** on the Mac mini (M-series, 10 cores, 16 GB), full render of #01's scene

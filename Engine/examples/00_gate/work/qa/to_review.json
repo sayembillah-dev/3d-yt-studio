@@ -1,0 +1,18 @@
+{
+ "mode": "all (first round / --all / length changed)",
+ "sheets": [
+  {
+   "sheet": "sheet_00.jpg",
+   "changed_frames": "f0-f105",
+   "cells": 8
+  }
+ ],
+ "flags": [
+  "flag_00_f56_pop.jpg",
+  "flag_01_f67_pop.jpg",
+  "flag_02_f72_pop.jpg",
+  "flag_03_f89_pop.jpg"
+ ],
+ "skipped_sheets": 0,
+ "skipped_flags": 0
+}

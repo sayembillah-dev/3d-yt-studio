@@ -3,7 +3,7 @@
 qa_frames.py — frame QA for a render: automatic anomaly detectors + story-aligned review sheets + the review rubric.
 
 Usage:
-  python3 qa_frames.py <project_dir> <render.mp4> [--every 15]
+  python3 qa_frames.py <project_dir> <render.mp4> [--every 15] [--all]
 
 Writes <project>/work/qa/:
   auto.json            automatic findings (each with frame, time, kind, severity, fix)
@@ -11,6 +11,11 @@ Writes <project>/work/qa/:
                        t / frame / the WORD being spoken / the shot-list beat → check "right visual at the right time"
   flag_XX_fNNN.jpg     16-frame strips around every automatic finding (look at these FIRST)
   review.md            the 5-lens rubric to fill in (copied from references/qa-rubric.md, pre-filled with auto findings)
+  to_review.json       WHICH images to Read this round (Improvements #9). Each sheet cell is compared with the same frame
+                       of the previous qa_frames run on this project (cells_sig.npz): a sheet is listed only if a cell's
+                       picture changed (worst 8x8 block diff > 6/255 at 90x160 — two renders of the same scene differ
+                       < 2) or its word/beat label changed; a flag strip only if that finding is new (not within ±2 f of
+                       last round's same kind). First run, a different frame count, or --all → every image is listed.
 
 Automatic detectors (no opinions):
   A1 blank        frame almost uniform (mean<10 or std<5)                         → P0  render/canvas failure
@@ -93,6 +98,7 @@ def main():
         print(__doc__); sys.exit(2)
     proj, video = os.path.abspath(a[0]), a[1]
     every = int(a[a.index('--every') + 1]) if '--every' in a else 15
+    review_all = '--all' in a
     out = os.path.join(proj, 'work', 'qa'); os.makedirs(out, exist_ok=True)
     for f_ in os.listdir(out):   # exFAT: removing x.jpg also removes its macOS sidecar ._x.jpg → tolerate missing files
         if f_.endswith('.jpg'):
@@ -220,6 +226,38 @@ def main():
             dr.text((x0 + 4, y0 + 500), shot_at(f)[:44], fill=(160, 220, 255))
         sheet.save(os.path.join(out, f'sheet_{sidx // per:02d}.jpg'), quality=85)
 
+    # Improvements #9: list only the images that changed since the last QA round (the reviewer reads just those)
+    sig_path, seen_path = os.path.join(out, 'cells_sig.npz'), os.path.join(out, 'flags_seen.json')
+    labels = {f: f"{word_at(f / fps)}|{shot_at(f)}" for f in keys}
+    prev_sig, prev_lab, prev_flags = None, {}, []
+    if not review_all and os.path.exists(sig_path) and os.path.exists(seen_path):
+        try:
+            z = np.load(sig_path); prev_sig = {int(f): z['sig'][k] for k, f in enumerate(z['frames'])}
+            meta = json.load(open(seen_path)); prev_lab = {int(k): v for k, v in meta.get('labels', {}).items()}
+            prev_flags = meta.get('flags', [])
+            if meta.get('frames') != n: prev_sig = None   # different length: everything moved
+        except Exception:
+            prev_sig = None
+    def cell_changed(f):
+        if prev_sig is None or f not in prev_sig or prev_lab.get(f) != labels[f]: return True
+        x = np.abs(small[f] - prev_sig[f]); hh, ww = x.shape[0] // 8, x.shape[1] // 8
+        return float(x[:hh * 8, :ww * 8].reshape(8, hh, 8, ww).mean(axis=(1, 3)).max()) > 6.0
+    sheets_review = []
+    for sidx in range(0, len(keys), per):
+        ch = [f for f in keys[sidx:sidx + per] if cell_changed(f)]
+        if ch: sheets_review.append({'sheet': f'sheet_{sidx // per:02d}.jpg', 'changed_frames': f'f{ch[0]}-f{ch[-1]}', 'cells': len(ch)})
+    flag_files = [f"flag_{j:02d}_f{x['frame']}_{x['kind']}.jpg" for j, x in enumerate(flagged)]
+    flags_review = [fn for fn, x in zip(flag_files, flagged) if prev_sig is None or
+                    not any(pf['kind'] == x['kind'] and abs(pf['frame'] - x['frame']) <= 2 for pf in prev_flags)]
+    n_sheets = len(range(0, len(keys), per))
+    mode = 'all (first round / --all / length changed)' if prev_sig is None else 'changed since last round'
+    json.dump({'mode': mode, 'sheets': sheets_review, 'flags': flags_review,
+               'skipped_sheets': n_sheets - len(sheets_review), 'skipped_flags': len(flag_files) - len(flags_review)},
+              open(os.path.join(out, 'to_review.json'), 'w'), indent=1)
+    np.savez_compressed(sig_path, frames=np.array(keys), sig=np.stack([small[f] for f in keys]) if keys else np.zeros((0, 160, 90)))
+    json.dump({'frames': n, 'labels': {str(k): v for k, v in labels.items()},
+               'flags': [{'kind': x['kind'], 'frame': x['frame']} for x in flagged]}, open(seen_path, 'w'))
+
     json.dump({'video': video, 'frames': n, 'findings': finds}, open(os.path.join(out, 'auto.json'), 'w'), indent=1)
     rub = os.path.join(SKILL, 'references', 'qa-rubric.md')
     with open(os.path.join(out, 'review.md'), 'w') as fh:
@@ -230,7 +268,8 @@ def main():
         if not finds: fh.write('- none\n')
     by = {}
     for x in finds: by[x['severity']] = by.get(x['severity'], 0) + 1
-    print(json.dumps({'frames': n, 'findings_by_severity': by, 'sheets': len(range(0, len(keys), per)), 'flag_strips': len(flagged), 'out': out}, indent=1))
+    print(json.dumps({'frames': n, 'findings_by_severity': by, 'sheets': n_sheets, 'flag_strips': len(flagged), 'out': out,
+                      'review': {'sheets': [x['sheet'] for x in sheets_review], 'flags': flags_review, 'mode': mode}}, indent=1))
     for x in flagged: print(f"  {x['severity']} {x['kind']:9s} f{x['frame']:5d} {x['t']:6.2f}s  {x['detail']}")
     sys.exit(1 if any(x['severity'] in ('P0', 'P1') for x in finds) else 0)
 

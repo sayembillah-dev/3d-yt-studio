@@ -53,7 +53,9 @@ def summary_qa_frames(c):
         by = obj.get('findings_by_severity', {})
         bad = sum(v for k, v in by.items() if k in ('P0', 'P1'))
         detail = ', '.join(f'{k}:{v}' for k, v in by.items()) or 'none'
-        return f"{bad} P0/P1 findings ({detail})"
+        rv = obj.get('review', {})
+        read = f" · READ {len(rv.get('sheets', []))}/{obj.get('sheets', 0)} sheets + {len(rv.get('flags', []))}/{obj.get('flag_strips', 0)} flags (work/qa/to_review.json)" if rv else ''
+        return f"{bad} P0/P1 findings ({detail}){read}"
     except Exception:
         return f"(exit {c['rc']})"
 
