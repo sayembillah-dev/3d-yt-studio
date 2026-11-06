@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
 import {ThreeCanvas} from '@remotion/three';
 import {useThree, useFrame} from '@react-three/fiber';
-import {AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRender, getInputProps} from 'remotion';
 import {Post, PostHandles} from './post/Post';
 import {MOODS, Mood, LOOK_DEFAULTS} from './moods';
 import {SkyDome} from './world/Sky';
@@ -105,8 +105,11 @@ export const Stage: React.FC<StageProps> = ({mood = 'day', camera, dof = null, s
   const sunLight = React.useRef<THREE.DirectionalLight | null>(null);
   const [sunMesh, setSunMesh] = useState<THREE.Mesh | null>(null);
   const useShadows = shadows ?? m.shadows ?? LOOK_DEFAULTS.shadows;
-  const rayAmt = rays ?? m.rays ?? (m.sunDisc ? LOOK_DEFAULTS.rays : 0);
-  const aoAmt = ao ?? 0.6;
+  // measure mode (render.sh measure): same motion, cheap look — only motion/pacing numbers are read from it
+  const measure = !!(getInputProps() as {measure?: boolean}).measure;
+  const rayAmt = measure ? 0 : rays ?? m.rays ?? (m.sunDisc ? LOOK_DEFAULTS.rays : 0);
+  const aoAmt = measure ? 0 : ao ?? 0.6;
+  const shadowRes = measure ? 1024 : 4096;
   const camNow = cameraAt(camera, frame).pos;
   // the sun (god-ray source) sits in the sky relative to the CAMERA, like the sky dome
   const sunDiscPos = m.sunDisc ? new THREE.Vector3(...m.sunDisc.dir).normalize().multiplyScalar(820).add(new THREE.Vector3(...camNow)) : null;
@@ -119,7 +122,7 @@ export const Stage: React.FC<StageProps> = ({mood = 'day', camera, dof = null, s
             {fog && <fog attach="fog" args={[m.fog, m.fogNear, m.fogFar]} />}
             <hemisphereLight args={[m.fill, m.ground, m.fillIntensity]} />
             <directionalLight ref={sunLight} position={[m.sunDir[0] * 50, m.sunDir[1] * 50, m.sunDir[2] * 50]} color={m.sun} intensity={m.sunIntensity}
-              castShadow={useShadows} shadow-mapSize-width={4096} shadow-mapSize-height={4096} shadow-bias={-0.0018} shadow-normalBias={0.07} shadow-radius={3}
+              castShadow={useShadows} shadow-mapSize-width={shadowRes} shadow-mapSize-height={shadowRes} shadow-bias={-0.0018} shadow-normalBias={0.07} shadow-radius={3}
               shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={16} shadow-camera-bottom={-16} shadow-camera-near={1} shadow-camera-far={160} />
             {rayAmt > 0 && sunDiscPos && (
               <mesh ref={(r) => { if (r && r !== sunMesh) setSunMesh(r); }} position={sunDiscPos} userData={{noShadow: true}}>
@@ -133,7 +136,7 @@ export const Stage: React.FC<StageProps> = ({mood = 'day', camera, dof = null, s
             <group position={camNow}><SkyDome mood={m} /></group>
             {children}
             <Rig spec={camera} frame={frame} applyRef={applyRef} shutter={shutter} dof={dof} gradeSet={{vignette: m.vignette, ...LOOK_DEFAULTS.grade, ...(m.grade ?? {}), ...grade}} sunLight={sunLight} sunDir={m.sunDir} shadows={useShadows} />
-            {post && (rayAmt === 0 || sunMesh) && <Post frame={frame} bloom={bloom ?? m.bloom} dof={!!dof} bokeh={dof?.bokeh ?? 4} sun={sunMesh} rays={rayAmt} ao={aoAmt} onBeforeRender={(h) => applyRef.current(h)} />}
+            {post && (rayAmt === 0 || sunMesh) && <Post frame={frame} msaa={measure ? 0 : 4} bloom={bloom ?? m.bloom} dof={!!dof} bokeh={dof?.bokeh ?? 4} sun={sunMesh} rays={rayAmt} ao={aoAmt} onBeforeRender={(h) => applyRef.current(h)} />}
           </Ctx.Provider>
         </ThreeCanvas>
       </FontGate>

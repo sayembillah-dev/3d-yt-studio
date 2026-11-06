@@ -4,10 +4,10 @@
  "frames": 108,
  "duration_s": 3.6,
  "motion": {
-  "diff_p50": 8.66,
-  "diff_p90": 11.996,
-  "diff_max": 21.68,
-  "pct_frames_moving": 36.11,
+  "diff_p50": 9.111,
+  "diff_p90": 12.498,
+  "diff_max": 22.443,
+  "pct_frames_moving": 40.74,
   "pct_frames_held": 0.0,
   "longest_hold_s": 0.0
  },
@@ -35,12 +35,12 @@
   ]
  },
  "colour": {
-  "sat_mean": 0.47,
-  "val_mean": 0.586,
-  "sat_p10": 0.452,
-  "sat_p90": 0.485,
+  "sat_mean": 0.515,
+  "val_mean": 0.587,
+  "sat_p10": 0.489,
+  "sat_p90": 0.531,
   "act_hue_deg_per_10s": [
-   32.0
+   208.0
   ]
  },
  "captions": {

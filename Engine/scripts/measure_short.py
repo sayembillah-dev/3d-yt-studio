@@ -19,7 +19,7 @@ Metrics (all deterministic, no opinions):
          -> beats_per_s, median beat gap (s), first beat (s), beats in 0-3 s, max gap (s)
   dissolves: windows where the frame is a blend of before/after (cross-fade detector) -> count, median length (frames)
   colour: per-second mean saturation / value (HSV, 0-1), act hue (dominant hue per 10 s)
-  captions: estimated caption cap height (px) from the bright-white text band
+  captions: estimated caption cap height (px at long side 1920, any render size) from the bright-white text band
   audio: integrated LUFS, LRA, true peak (ffmpeg ebur128)
   voice: wps, wps in first 3 s, pauses > 0.33 s, position of "you see" (% of runtime)
 """
@@ -173,9 +173,9 @@ def caption_cap_height(path, fps, n_samples=24):
         for r in on:
             cur = cur + 1 if r else 0
             best = max(best, cur)
-        hs.append(best)
+        hs.append(best * 1920.0 / max(H, W))   # px at full size (long side 1920, refs' size): previews read the same
     cap.release()
-    return pct(hs, 50) if hs else None
+    return round(pct(hs, 50), 1) if hs else None
 
 
 def ebur128(path):

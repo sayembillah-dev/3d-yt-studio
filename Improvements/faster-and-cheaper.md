@@ -8,7 +8,40 @@ This analysis is built from video #01, *Why the Dutch Drowned Their Own Farms* (
 
 Nothing on this page has been implemented yet. Section 5 is the to-do list.
 
-## Status (2026-11-06): Steps 1–3 built and tested; Steps 4–6 not started
+## Status (2026-11-06): Steps 1–4 built and tested; Steps 5–6 not started
+
+**4. Tier 2 (render time). Measured 2026-11-06 on #01's real scene (58 s, 1746 frames), idle M1, incl. bundling:**
+
+| Render | Time | Numbers vs. full size |
+|---|---|---|
+| full size `video` (1080×1920) | **97–106 s** (two runs) | — |
+| `preview` (270×480, full look) | 98–119 s | identical: all 42 beats on the same frames, every gate value equal |
+| `pace` (270×480, cheap look) | 39–56 s | 41/42 beats within 3 f; same median gap, beats in 3 s, holds, dissolves; first beat +1 f |
+| `splice` 60 frames into a render | 49–56 s full size, 14 s preview size | spliced frames match a fresh render (two same-day renders agree ≥ 41 dB on every frame) |
+
+- **The big finding: #01's render time was the machine, not the picture size.** The same full render took 857–913 s
+  during #01 and 97–106 s today, ~8× faster with no engine speed change. The slowdown grew with scene size (gate shot
+  only 2–3× slower then), which points to memory pressure on 8 GB (Claude + VS Code + Chrome renders) — or the webpack
+  cache on the exFAT SSD, moved to the internal disk the same day (not re-tested: it unmounted the SSD twice).
+  `render_log.jsonl` now records size + look per render, so #02 will show which. On an idle machine a full render
+  is ~2 min, so the Phase 9 loop stays full size; `preview`/`pace`/`splice` are for slow days and long-form
+  (a 10-min 16:9 video is ~18k frames, ~15+ min even at today's speed).
+- **`beat_predict.mjs` was NOT built, on purpose.** On #01 the camera path explains only about half the measured
+  motion (correlation 0.5): many beats come from characters and caption pops, not the camera — which is why the gap
+  sat at 1.05–1.2 s. A camera-only prediction would be wrong in exactly the direction that cost the renders, and a
+  formula fitted to #01 could wrongly fail future videos with a different style. `pace` measures the real number
+  for any video in under a minute instead.
+- Built: `render.sh preview|pace|splice`, `splice.py`, an engine `measure` prop (Stage/Post: no AO / god rays /
+  MSAA, 1024 shadow map — only when asked for), `qa_all.sh pace`, a size check in `qa_all.sh final` (final.mp4 must
+  match the composition's size: a preview can never be delivered), caption height normalised to long side 1920 in
+  `measure_short.py` (portrait and landscape), splice reads the composition size (works for 16:9 too), render
+  size + look in the render log, dashboard labels. SKILL.md Phase 9: speed table + which render for which fix.
+- Normal renders unchanged: A/B of old vs. new engine differs no more than two runs of the new engine (00_gate
+  43.85 vs 43.86 dB; #01 water/crowd frames 940–980: 43.5 dB). 00_gate gate: cam_qa 17/17, qa_frames 0 P0/P1,
+  compare PASS.
+- Open, not caused by this work: #01's delivered video can't be reproduced bit-exactly from the committed files —
+  frames 554–580 and 928–1026 (water sparkles, crowd) differ at ~29–33 dB with the committed engine too.
+- Also fixed: `dashboard.command` never opened the browser (Python buffered its "Dashboard:" line; now `python3 -u`).
 
 **1. Phase-group sessions + handoff note.** Built into `.claude/skills/stickworld-video/SKILL.md` — "Working
 across sessions" section + a subagent prompt template. From Phase 6 (shotplan) on, the skill hands each

@@ -8,14 +8,15 @@ import {CameraMotionBlurEffect, GradeEffect} from './MotionBlur';
 export type PostHandles = {mb: CameraMotionBlurEffect; dof: DepthOfFieldEffect | null; grade: GradeEffect; bloom: BloomEffect; rays: GodRaysEffect | null; ao: SSAOEffect | null};
 export type PostProps = {bloom: number; dof: boolean; bokeh: number; frame: number; onBeforeRender: (h: PostHandles) => void;
   /** god rays: the sun mesh (light source) + strength 0..1 (0 = off) */ sun?: THREE.Mesh | null; rays?: number;
-  /** screen-space ambient occlusion strength (0 = off): contact darkening in creases — kills the flat look */ ao?: number};
+  /** screen-space ambient occlusion strength (0 = off): contact darkening in creases — kills the flat look */ ao?: number;
+  /** MSAA samples on the composer (0 in measure mode) */ msaa?: number};
 
 /**
  * Hand-driven postprocessing chain: render scene → motion blur → DOF → bloom → grade.
  * We own the composer and call render() explicitly for each Remotion frame (after the camera rig has been
  * applied), so headless rendering is deterministic and never captures an un-post-processed / empty canvas.
  */
-export const Post: React.FC<PostProps> = ({bloom, dof, bokeh, frame, onBeforeRender, sun = null, rays = 0, ao = 0}) => {
+export const Post: React.FC<PostProps> = ({bloom, dof, bokeh, frame, onBeforeRender, sun = null, rays = 0, ao = 0, msaa = 4}) => {
   const {gl, scene, camera, size} = useThree();
   const handles = useMemo<PostHandles>(() => ({
     mb: new CameraMotionBlurEffect(),
@@ -32,7 +33,7 @@ export const Post: React.FC<PostProps> = ({bloom, dof, bokeh, frame, onBeforeRen
       worldProximityThreshold: 0.6, worldProximityFalloff: 0.3, luminanceInfluence: 0.55, radius: 0.03, intensity: 1.6 * ao, bias: 0.02, fade: 0.02, color: new THREE.Color('#3A2450'), resolutionScale: 0.75});
   }
   const composer = useMemo(() => {
-    const c = new EffectComposer(gl, {frameBufferType: THREE.HalfFloatType, multisampling: 4});
+    const c = new EffectComposer(gl, {frameBufferType: THREE.HalfFloatType, multisampling: msaa});
     c.addPass(new RenderPass(scene, camera));
     // AO first (contact shadows in the creases), then motion blur (needs depth), DOF, god rays, bloom + grade
     if (normalPass && handles.ao) { c.addPass(normalPass); c.addPass(new EffectPass(camera, handles.ao)); }
@@ -41,7 +42,7 @@ export const Post: React.FC<PostProps> = ({bloom, dof, bokeh, frame, onBeforeRen
     if (handles.rays) c.addPass(new EffectPass(camera, handles.rays));
     c.addPass(new EffectPass(camera, handles.bloom, handles.grade));
     return c;
-  }, [gl, scene, camera, handles, normalPass]);
+  }, [gl, scene, camera, handles, normalPass, msaa]);
   useEffect(() => () => composer.dispose(), [composer]);
   useLayoutEffect(() => { composer.setSize(size.width, size.height); }, [composer, size.width, size.height]);
 

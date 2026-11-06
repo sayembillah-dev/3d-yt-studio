@@ -4,14 +4,16 @@ qa_all.py — one quiet QA round: runs the right numeric checks for the phase, p
 (failures show their fix text), writes full logs to work/logs/. See Improvements/faster-and-cheaper.md #4.
 Replaces 4-6 separate script calls + their raw output per QA round.
 
-usage: python3 qa_all.py <project_dir> <gate|qa|final> [Comp]
+usage: python3 qa_all.py <project_dir> <gate|qa|pace|final> [Comp]
   gate   Phase 7: cam_qa (17 gates) + compare --skip voice,audio,duration,dissolves_per_min,median_beat_gap_s
          on work/<Comp>.mp4 (needs Comp; render it first with render.sh)
   qa     Phase 9: qa_frames + compare --skip audio on work/<Comp>.mp4 (needs Comp; render it first)
+  pace   Phase 9 fix loops for pacing-only fixes: cam_qa + compare on work/<Comp>_pace.mp4 (render.sh pace) —
+         motion/pacing numbers only (look, colour, captions, voice, audio skipped: that render has a cheap look)
   final  Phase 10: mix.py (writes output/final.mp4) + compare, no skip (Comp not needed, mix.py finds the video)
 exit 0 only if every check in the mode passes.
 """
-import json, os, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,7 +58,8 @@ def summary_qa_frames(c):
         return f"(exit {c['rc']})"
 
 
-SUMMARY = {'cam_qa': summary_cam_qa, 'compare': summary_compare, 'mix': summary_mix, 'qa_frames': summary_qa_frames}
+SUMMARY = {'cam_qa': summary_cam_qa, 'compare': summary_compare, 'mix': summary_mix, 'qa_frames': summary_qa_frames,
+           'size': lambda c: c['text'].split(' — ')[0]}
 
 
 def fix_text(c):
@@ -64,6 +67,8 @@ def fix_text(c):
     if 'FIX PLAYBOOK:' in c['text']:
         i = next(j for j, l in enumerate(lines) if l.strip() == 'FIX PLAYBOOK:')
         return lines[i:]
+    if c['name'] == 'size':
+        return [c['text']]
     if c['name'] == 'qa_frames':
         try:
             _, end = json.JSONDecoder().raw_decode(c['text'])
@@ -102,14 +107,37 @@ def main():
         checks.append(('cam_qa', [sys.executable, os.path.join(HERE, 'cam_qa.py'), proj]))
         checks.append(('qa_frames', [sys.executable, os.path.join(HERE, 'qa_frames.py'), proj, video]))
         checks.append(('compare', [sys.executable, os.path.join(HERE, 'compare.py'), video, '--skip', 'audio']))
+    elif mode == 'pace':
+        if not comp:
+            print('pace mode needs <Comp>'); sys.exit(2)
+        video = os.path.join(proj, 'work', f'{comp}_pace.mp4')
+        checks.append(('cam_qa', [sys.executable, os.path.join(HERE, 'cam_qa.py'), proj]))
+        checks.append(('compare', [sys.executable, os.path.join(HERE, 'compare.py'), video,
+                                    '--skip', 'audio,voice,saturation,value,caption_cap_px']))
     elif mode == 'final':
         checks.append(('mix', [sys.executable, os.path.join(HERE, 'mix.py'), proj]))
         checks.append(('compare', [sys.executable, os.path.join(HERE, 'compare.py'),
                                     os.path.join(proj, 'output', 'final.mp4')]))
     else:
-        print('mode must be gate|qa|final'); sys.exit(2)
+        print('mode must be gate|qa|pace|final'); sys.exit(2)
 
     results = [run(name, logdir, stamp, cmd) for name, cmd in checks]
+    if mode == 'final':   # previews (render.sh preview/pace) are 270x480: never deliver one
+        fin = os.path.join(proj, 'output', 'final.mp4')
+        r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+                            '-of', 'csv=p=0', fin], capture_output=True, text=True)
+        try:
+            w, h = (int(x) for x in r.stdout.strip().split(','))
+        except ValueError:
+            w = h = 0
+        # the composition's own size (scenes/index.tsx `compositions`: 1080x1920 Short, 16:9 long-form)
+        src = open(os.path.join(proj, 'scenes', 'index.tsx'), encoding='utf-8').read()
+        sizes = re.findall(r'width:\s*(\d+),\s*height:\s*(\d+)', src[src.find('compositions'):])
+        want = {(int(a), int(b)) for a, b in sizes} or {(1080, 1920), (1920, 1080)}
+        ok = (w, h) in want
+        need = ' or '.join(f'{a}x{b}' for a, b in sorted(want))
+        results.append({'name': 'size', 'rc': 0 if ok else 1, 'log': fin,
+                        'text': f'{w}x{h}' if ok else f'{w}x{h} — final.mp4 is not full size ({need}): it was mixed from a preview. FIX: bash render.sh <project> video <Comp>, then qa_all.sh final again.'})
     overall = 0
     print(f'QA_ALL ({mode}):')
     for c in results:

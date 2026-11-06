@@ -218,7 +218,12 @@ bash $S/render.sh $P stills <Comp> 15,60,120,…   # one still per beat mid-fram
 **Gate:** cam_qa 17/17 PASS; stills sheet viewed (Read the jpg) and every beat's `visual` from shotlist.json is visible.
 
 ## Phase 9 — `qa` (render → measure → review → fix loop)
-1. `bash $S/render.sh $P video <Comp>` → `$P/work/<Comp>.mp4` (silent).
+Render speed (measured 2026-11-06, idle M1, #01's 58 s / 1746 f scene, incl. bundling): full size `video` 97–106 s ·
+`preview` (270×480, full look, every QA number identical to full) 98–119 s · `pace` (pacing numbers only) 39–56 s ·
+`splice` of 60 frames 49–56 s. The same full render took 7–15 min during #01 on a busy machine: before a render
+round, keep heavy apps closed. Check `work/render_log.jsonl` `seconds` — if a full render takes > 5 min, switch the
+fix loop to `preview` (≈ 2× faster on a slow machine) and render full size again only for the gate.
+1. `bash $S/render.sh $P video <Comp>` → `$P/work/<Comp>.mp4` (silent, full size).
 2. `bash $S/qa_all.sh $P qa <Comp>` → cam_qa + qa_frames + compare (audio skipped) in one call; one PASS/FAIL
    table, fix text only for what failed, full logs in `work/logs/`. qa_frames also writes `work/qa/`: auto
    findings (P0/P1 fail), flag strips, review sheets (one cell per 0.5 s, labelled with the spoken word + the
@@ -226,7 +231,13 @@ bash $S/render.sh $P stills <Comp> 15,60,120,…   # one still per beat mid-fram
 3. **Review**: Read every `work/qa/flag_*.jpg` and every `work/qa/sheet_*.jpg`. Fill `work/qa/review.md` (the 5-lens
    rubric: each check yes/no with frame numbers). Score each lens /10 with the rubric's scoring rule.
 4. **Fix loop**: for every failing gate/check look up `$R/fix-playbook.md` (keyed by the exact gate/check name), make
-   the change, re-render only the affected range (`render.sh $P range <Comp> 300-420`), re-check, repeat.
+   the change, then re-check with the cheapest render that can show it:
+   - pacing-only fix (beat gaps, first beat, holds, dissolves, cuts — camera.ts timing): `render.sh $P pace <Comp>` +
+     `qa_all.sh $P pace <Comp>` (numbers only; its look is deliberately cheap — never judge the look from it).
+   - fix confined to some frames (a prop, a pose, a collision): `render.sh $P splice <Comp> 300-420[,900-960]` —
+     re-renders only those frames into `work/<Comp>.mp4` at its size (old one kept as `<Comp>.prev.mp4`), then
+     `qa_all.sh $P qa <Comp>`. Pad each range ±15 f. A camera.ts change moves every later frame: not a splice.
+   - anything else: `render.sh $P video <Comp>` again.
    Max 4 loops per issue; if still failing, stop and tell the user exactly what fails and why.
 5. **Timestamped user feedback** enters here: convert each "m:ss" to a frame (× 30), render `range` ±30 f around it,
    view the strip, fix, re-render, show the user the before/after strip.
@@ -244,7 +255,7 @@ and delivery all build on this video being right, so a mistake caught here is fa
 4. `bash $S/qa_all.sh $P final` → mix.py (`$P/output/final.mp4`: static music bed 20 dB under the voice, no
    ducking, ambience, SFX; mono; master −14 LUFS, TP −2 dBTP; voice −13.8 ± 1.5 dBFS RMS) + compare (now with
    audio + voice) in one call; one PASS/FAIL table, full logs in `work/logs/`.
-**Gate:** `qa_all.sh $P final` exits 0 (MX1–MX4 PASS, compare 0 hard fails); lufs −15…−13; TP ≤ −1.0.
+**Gate:** `qa_all.sh $P final` exits 0 (MX1–MX4 PASS, compare 0 hard fails, size = full, never a preview); lufs −15…−13; TP ≤ −1.0.
 
 ## Phase 11 — `thumbnail`
 `python3 $S/thumbnail.py $P --suggest` (top frames + `work/thumb_candidates.jpg`), then
@@ -269,11 +280,11 @@ Set phase `done` (`new_project.py --set-phase $P done` → closes the ledger), t
 | transcribe.py | 5 | built |
 | plan_lint.py | 6 | built (PL1–PL10) |
 | cam_dump.mjs / cam_qa.py | 8 | built (17 gates) |
-| render.sh / stills.mjs | 7–9 | built (stills.mjs: one browser+server for the whole still batch, not one per frame) |
+| render.sh / stills.mjs / splice.py | 7–9 | built (`stills\|video\|preview\|pace\|range\|splice`; stills.mjs: one browser+server per still batch; splice.py: re-rendered ranges → one re-encode) |
 | qa_frames.py | 9 | built (calibrated on 4 references: 0 false P1) |
 | measure_short.py / compare.py | 9–10 | built |
 | sfx_cues.mjs / sfx_synth.py / mix.py | 10 | built (SX1–SX3, MX1–MX4; procedural SFX/ambience/music, numpy only) |
-| qa_all.sh / qa_all.py | 7, 9, 10 | built (`gate\|qa\|final`; bundles cam_qa+qa_frames+compare, or mix+compare, into one PASS/FAIL table) |
+| qa_all.sh / qa_all.py | 7, 9, 10 | built (`gate\|qa\|pace\|final`; bundles cam_qa+qa_frames+compare, or mix+compare, into one PASS/FAIL table) |
 | thumbnail.py | 11 | built (`--suggest`, then `--frame F --text`; clean still without captions; TH1–TH2) |
 | build_reference_numbers.py | — | built (re-run when references are added) |
 | ledger.py | all | built (`begin` · `phase` · `extra` · `show` · `refresh`; one row per video in `<studio>/ledger.md`) |

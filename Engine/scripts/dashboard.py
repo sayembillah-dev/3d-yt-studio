@@ -44,6 +44,9 @@ FRIENDLY_CMD = [
     (r'cam_qa\.py', 'Checking the camera path'),
     (r'render\.sh\s+\S+\s+stills', 'Taking preview pictures'),
     (r'render\.sh\s+\S+\s+range', 'Re-rendering one section of the video'),
+    (r'render\.sh\s+\S+\s+splice', 'Re-rendering only the changed parts of the video'),
+    (r'render\.sh\s+\S+\s+preview', 'Rendering a quick small preview of the video'),
+    (r'render\.sh\s+\S+\s+pace', 'Doing a quick timing check of the video'),
     (r'render\.sh\s+\S+\s+video', 'Rendering the video'),
     (r'qa_frames\.py', 'Checking each frame for mistakes'),
     (r'compare\.py', 'Comparing against the reference videos'),
@@ -59,7 +62,8 @@ FRIENDLY_CMD = [
     (r'cam_dump\.mjs', 'Reading the camera path'),
 ]
 RENDER_MODE_LABEL = {'stills': 'Took preview pictures', 'video': 'Rendered the full video',
-                      'range': 'Re-rendered part of the video'}
+                      'range': 'Re-rendered part of the video', 'splice': 'Re-rendered only the changed parts',
+                      'preview': 'Rendered a quick small preview', 'pace': 'Did a quick timing check'}
 
 
 def ago(t):

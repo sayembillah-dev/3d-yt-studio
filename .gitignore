@@ -19,3 +19,6 @@ Engine/references/videos/guide.mp4
 __pycache__/
 *.pyc
 npm-debug.log*
+
+# per-run QA logs (qa_all.sh writes one set per run)
+Engine/examples/*/work/logs/

@@ -7,7 +7,7 @@
    "t": 1.87,
    "kind": "pop",
    "severity": "P2",
-   "detail": "block diff 132 vs local 46, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "detail": "block diff 145 vs local 47, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
    "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
   },
   {
@@ -15,7 +15,7 @@
    "t": 2.23,
    "kind": "pop",
    "severity": "P2",
-   "detail": "block diff 110 vs local 41, 17% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "detail": "block diff 118 vs local 42, 16% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
    "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
   },
   {
@@ -23,7 +23,7 @@
    "t": 2.4,
    "kind": "pop",
    "severity": "P2",
-   "detail": "block diff 84 vs local 30, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "detail": "block diff 90 vs local 32, 19% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
    "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
   },
   {
@@ -31,7 +31,7 @@
    "t": 2.97,
    "kind": "pop",
    "severity": "P2",
-   "detail": "block diff 112 vs local 33, 11% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
+   "detail": "block diff 120 vs local 35, 11% of pixels changed (local, persists) \u2014 check strip: intended pose/caption/prop change?",
    "fix": "Something appears/disappears/teleports in 1 frame: check character enter/exit, path keys, visibility toggles, prop mounts at this frame. If intended, add it to TRANSITIONS (cut) or make it a dissolve."
   }
  ]
